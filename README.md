@@ -22,6 +22,23 @@
 
 另外带两个编排脚本：`run-automation.ps1` 跑完整一轮（含无人值守调度），`run-rebuild.ps1` 按队列批量重做存量。
 
+## 示例
+
+`examples/published/` 里是从公众号同步下来的真实成品，共 41 篇：每篇一个目录，含
+
+- `文章.html` —— 发布时的排版成品（内联样式，公众号编辑器可直接粘贴的那一版）
+- `封面.jpg` —— 对应的 1280×544 公众号封面
+- `meta.json` —— 标题、日期、media_id
+
+索引见 `examples/published/README.md`。
+
+因为发布后的文章仍留在公众号草稿箱里，这份示例可以随时重新同步：
+
+```bash
+node tools/sync-published-examples.mjs            # 全量同步
+node tools/sync-published-examples.mjs --dry-run  # 只预览，不落盘
+```
+
 ## 安装
 
 ```bash
@@ -73,6 +90,10 @@ assets/
 templates/
   podcast-interview/template.json 排版模板
 scripts/                          11 个脚本：引擎 + 编排
+tools/
+  sync-published-examples.mjs     从公众号草稿箱同步已发布成品作为示例
+examples/
+  published/                      已发布成品示例（文章.html + 封面 + 索引）
 ```
 
 ## 直接用

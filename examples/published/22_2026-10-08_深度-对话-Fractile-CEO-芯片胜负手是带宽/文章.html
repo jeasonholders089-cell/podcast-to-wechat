@@ -1,0 +1,97 @@
+<div style="">
+
+<p style="margin:0 0 18px;font-size:17px;line-height:1.85;color:#2B2B2B;font-weight:600;">Walter Goodwin 的公司叫 Fractile，2022 年夏天成立，现在 150 个人，只做一件事：让全世界最大的模型跑得更快。</p>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">他在 No Priors 这期节目里给了一组数字，过去 20 年，AI 芯片的算力涨了大约 100 万倍，内存带宽只涨了 40 倍。<strong style="font-weight:700;">他赌的就是这个缺口。</strong></p>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">主持人 Sarah Guo 是 Conviction 的合伙人，这场对话持续了 35 分钟，几乎没有寒暄。两个人一直在拆同一件事，当算力不再是唯一稀缺的东西，芯片这门生意该怎么重新排座次。</p>
+
+<h2 style="font-size:19px;line-height:1.5;margin:36px 0 18px;padding:2px 0 2px 12px;border-left:4px solid #E8552D;color:#2B2B2B;font-weight:700;">主要观点</h2>
+
+<ul style="margin:0 0 18px;padding-left:22px;color:#2B2B2B;font-size:16px;line-height:1.85;">
+<li style="margin:0 0 10px;">定制芯片看起来百花齐放，配方其实高度雷同：同一类 HBM 内存、同一类矩阵计算单元、同一套台积电先进封装</li>
+<li style="margin:0 0 10px;">Fractile 前两年做的是 SRAM 芯片，2023 年底自己推翻，转向高带宽 DRAM</li>
+<li style="margin:0 0 10px;">「秒回的聊天机器人」是更快的马，让长程 agent 快上几十倍才是他真正想做的事</li>
+<li style="margin:0 0 10px;">芯片有 3 到 5 年的摊销周期，谁也做不到几周换一代；能压缩出 3 到 6 个月时间差的人，赢下所有部署</li>
+<li style="margin:0 0 10px;">前沿实验室不会把命押在自研芯片上，第一方芯片的另一个作用是让英伟达降价</li>
+</ul>
+
+<h2 style="font-size:19px;line-height:1.5;margin:36px 0 18px;padding:2px 0 2px 12px;border-left:4px solid #E8552D;color:#2B2B2B;font-weight:700;">定制芯片的百花齐放，是错觉</h2>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">今天的推理芯片市场，看上去选择多得离谱。谷歌有 TPU，Meta 有 MTIA，微软有 Maya，OpenAI 也在做自己的芯片。</p>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">Walter 的说法是，把这些芯片拆开看，<strong style="font-weight:700;">「外面有大量几乎一模一样的芯片」</strong>。大家都用 HBM 这类 DRAM 内存，都在押矩阵乘法专用的计算单元，都用台积电的先进封装。</p>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">真正的门槛不在前端，在后端。这些内部芯片绝大多数交给少数几家 ASIC 交付方落地，最大的一家是博通，市值 2 万亿美元。前端设计写的是代码，最终送到台积电手里的是一个 GDSII 文件，一个「第几层金属放在哪、每一颗晶体管放在哪」的版图。模拟 IP、芯片间的互联、针对某个制程节点的物理摆放，长期是外包出去的活。</p>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">他给团队的定位是：从头做到尾。150 个人里，有做前端设计的、有做物理设计的、有做后端实现的，先进封装也自己做。每个人的摊子都不大，凑起来是一台回环更短的开发机器。</p>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">这个机会的参照物不是英伟达的一颗 GPU。他提到，<strong style="font-weight:700;">拆开一套英伟达的系统，里面是六到九颗英伟达自己设计的芯片</strong>，彼此咬合成一个整体。这中间的差距，不是靠单点性能补上的。</p>
+
+<h2 style="font-size:19px;line-height:1.5;margin:36px 0 18px;padding:2px 0 2px 12px;border-left:4px solid #E8552D;color:#2B2B2B;font-weight:700;">他先做了两年 SRAM，然后自己推翻了它</h2>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">Fractile 最早的技术路线，是用 SRAM 做芯片。</p>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">逻辑和计算单元长在同一块硅片上，带宽能拉到极高，语言模型可以跑到每秒几千个 token。Groq、Cerebras 走的就是这条路。团队做了大概两年，到 2023 年底、2024 年初，开始担心这条路的上限。</p>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">参数量的增长是明面上的，另一件事更让他们不安：上下文长度在变长。</p>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">上下文一长，SRAM 容量小的短板就藏不住了。更麻烦的是部署方式，今天这些高带宽芯片实际上跑不了长上下文的注意力计算，最后还得切回 GPU。<strong style="font-weight:700;">最想加速的那部分工作，恰恰是它们做不到的那部分。</strong></p>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">他们花了大约两年时间，跟内存厂商一起做另一种方案：把 DRAM 的带宽推到远超今天的水平。这条路线如果跑通，等于把 GPU、TPU 那种大容量低成本的内存，和 Groq、Cerebras 那种速度合到一颗芯片上。他给出的数字是，<strong style="font-weight:700;">单颗芯片的带宽相当于 HBM 方案芯片的 25 倍</strong>。这个倍数我没法独立验证，但你至少能看出，他为什么愿意推翻自己做了两年的东西。</p>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">平台计划在明年下半年进入爬坡。</p>
+
+<h2 style="font-size:19px;line-height:1.5;margin:36px 0 18px;padding:2px 0 2px 12px;border-left:4px solid #E8552D;color:#2B2B2B;font-weight:700;">「秒回聊天机器人」是更快的马</h2>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">他提到了福特那句老话，如果去问用户想要什么，答案是更快的马。</p>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">在他的用法里，把聊天机器人的响应速度从一秒压到 0.3 秒，就是那匹更快的马。让多参数万亿级的模型以每秒几千个 token 的速度跑长程 agent，才是能力上的台阶。</p>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">算力要不要省，这个问题在数据中心尺度上会露出真面目。他说到推理的经济性，<strong style="font-weight:700;">最后塌缩成一个很朴素的指标，每 GB 内存的成本</strong>。要同时服务几千个用户，带宽是开销，容量也是开销。</p>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">带宽这条线还牵着模型架构。混合专家（MoE）模型的常识是越稀疏越省钱，从 1/16 稀疏做到 1/128、1/256，同样智力水平下能省下大量算力。可今天在 HBM 的 GPU 上，这样的模型往往跑不出效率，卡在带宽上。硬件形态和模型设计互相拽着走，这条因果链比很多人想的更紧。</p>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">所以他把带宽当成一条独立的扩展曲线：算力 20 年涨了 100 万倍，带宽只涨了 40 倍，把稀缺性换个位置，就能用更少的算力换到同样的智力水平。这是他做 workload 取舍时最底层的依据。</p>
+
+<h2 style="font-size:19px;line-height:1.5;margin:36px 0 18px;padding:2px 0 2px 12px;border-left:4px solid #E8552D;color:#2B2B2B;font-weight:700;">芯片不是软件：3 到 5 个月回片，3 到 5 年摊销</h2>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">芯片这行有很多绕不过去的物理账。</p>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">一颗芯片从送去代工到拿回来，即使是加急的热批（hot lot），也要三到五个月。拿回来之后能不能变成好生意，还要看摊销，<strong style="font-weight:700;">一颗芯片得有 3 到 5 年的摊销窗口，才谈得上是一笔合理的财务决策</strong>。</p>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">这两件事决定了芯片永远不会像软件那样迭代。他明确说自己不相信「几周就出一颗全新芯片」的说法，数据中心的电力、安装的节奏、硅片的融资成本，全是硬约束。听到这里我反倒觉得，眼下这轮 AI 芯片创业潮里，愿意公开说自己做不到快的团队，比喊得响的更值得听。</p>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">能压缩的是另一段时间：从观察到需求，到把这个判断变成量产。压缩得越短，你能同时压在手上的方案就越多，可以在关键时刻挑一颗推上量。他把这种状态叫做一列滚动的下注清单。</p>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">代价是判断力。压得越短，越需要提前赌对模型架构的方向。他提到一个很现实的现象，前沿开源模型的注意力机制每几周就换一版，稀疏度也在变。这中间稳定不变的东西不多，<strong style="font-weight:700;">「模型永远想要更多内存带宽」是少数几条之一</strong>。</p>
+
+<h2 style="font-size:19px;line-height:1.5;margin:36px 0 18px;padding:2px 0 2px 12px;border-left:4px solid #E8552D;color:#2B2B2B;font-weight:700;">十年太长，他说除以四</h2>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">Sarah Guo 转述了一位头部半导体公司 CEO 的判断，从首席架构师的意图，到生成一份可以直接送去流片的 GDSII 文件，全流程自动化需要 10 年。这位 CEO 要求不要公开姓名。</p>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">Walter 的回应是，他有一条用了几年的经验法则，<strong style="font-weight:700;">把任何时间预期除以四，然后再减掉一点</strong>。</p>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">他解释了自己为什么敢这么算。芯片设计的中段塞着一堆 NP 难问题，布局布线这类步骤靠传统算法跑，一跑就是好几天。这类计算量不会因为大模型变聪明就消失，只会变成新的瓶颈。</p>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">他把这件事和 AI 研究自己的瓶颈类比。智能体可以替人做实验设计，但实验本身要花机时，于是实验成了瓶颈。芯片也是同一个结构，可以先用模糊的近似算法把设计推到接近终点，最后那道签字确认留给 Cadence、Synopsys 和台积电，<strong style="font-weight:700;">DRC、LVS 这类签核检查在很长时间里不会消失</strong>。</p>
+
+<h2 style="font-size:19px;line-height:1.5;margin:36px 0 18px;padding:2px 0 2px 12px;border-left:4px solid #E8552D;color:#2B2B2B;font-weight:700;">第一方芯片的另一个作用：让英伟达降价</h2>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">节目最后聊到五年后的市场结构。Sarah Guo 的问题是，一家超大客户到底会买什么，英伟达、AMD、新的加速器公司，还是四家都在做的自研芯片。</p>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">他的回答分两层。</p>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">供应多样性是确定的。算力对这批公司来说已经是生存问题，谁都不会只留一条供应链。他顺带说了行业里的一个玩笑，<strong style="font-weight:700;">第一方自研芯片的首要作用，是把英伟达的价格压下来</strong>。玩笑有几分是真的，因为这些自研方案在架构上相当接近，赌的不是别人做不到的能力，而是议价和总供给。</p>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">第二层是前沿实验室为什么不敢 all-in。他给了一个很具体的死亡场景：假设你是一家实验室，把身家押在自研的定制芯片上，对手同期发现了新的计算突破，效率高出好几倍，但只有对手那颗芯片跑得动，你有可能在九个月里出局，甚至等不到自己那批芯片部署完成。<strong style="font-weight:700;">在模型层打架、在芯片层统一，是这批公司不得不做的选择。</strong></p>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">这也是他给第三方芯片公司留出的位置，专门优化速度的那一层。前沿能力是有保质期的，开源模型一直在后面追，付费用户买的是同一段时间里能跑出更多推理次数。</p>
+
+<h2 style="font-size:19px;line-height:1.5;margin:36px 0 18px;padding:2px 0 2px 12px;border-left:4px solid #E8552D;color:#2B2B2B;font-weight:700;">结尾</h2>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;">这期访谈里没有颠覆性的宣言，只有一堆具体的账。带宽和算力的增速差、三到五个月的回片时间、三到五年的摊销窗口，这些东西决定了谁敢下注、谁能下注。</p>
+
+<p style="margin:0 0 18px;font-size:16px;line-height:1.85;color:#2B2B2B;"><strong style="font-weight:700;">在一个模型每两周换一版的行业里，芯片公司卖的不是硬件，是把自己下注的周期压得比别人短的能力。</strong></p>
+
+</div>

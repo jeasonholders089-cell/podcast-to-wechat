@@ -1,0 +1,116 @@
+
+<html lang="zh-CN">
+
+
+
+
+
+
+<section style="max-width:680px;margin:0 auto;padding:26px 20px;background:#F5F1E9;font-family:-apple-system,BlinkMacSystemFont,&#39;PingFang SC&#39;,&#39;Hiragino Sans GB&#39;,&#39;Microsoft YaHei&#39;,Arial,sans-serif;font-size:16px;line-height:1.85;color:#2B2B2B;-webkit-font-smoothing:antialiased;">
+
+  <p style="margin:0 0 8px;font-size:12px;letter-spacing:2px;color:#E8552D;font-weight:700;">ZONGZI AI WORLD</p>
+  <p style="margin:0 0 24px;font-size:13px;line-height:1.8;color:#8a8378;letter-spacing:.3px;">来源：20VC with Harry Stebbings 对话 Speechify 创始人兼 CEO Cliff Weitzman（2026 年 9 月）</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">一块 H100，买下来大约 3 万美元。同一块卡，从 GCP 上按 spot instance 租，每小时 5 美元；从 Azure 或 AWS 租，大概 3.5 美元。乘上 24 小时、365 天，一年租金 3.5 万到 5 万美元。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">也就是说，<strong style="color:#E8552D;">租一年，比买下来还贵 1.5 倍</strong>。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">这笔账，Speechify 创始人 Cliff Weitzman 已经算了四年。他和哥哥从 2022 年开始买 GPU，一路买到 Rubin 机架——一块 Rubin 机架 72 张卡，需要液冷，需要用卡车运到数据中心，还得单独买保险，因为"一车 GPU 的价值等于好几套房子"。他甚至愿意为提前到货额外付钱，主持人 Harry Stebbings 开场就直接问了这件事：每块 GPU 多付 10 万美元，只为提前 4 个月拿到货，你到底知道什么市场不知道的事？</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">这一期播客最有价值的地方，不在于"该不该买卡"的结论，而在于一个一线创始人把 AI 创业的成本结构、组织结构和战略选择，拆成了可以算的账。他也在这期里承认了自己创业以来最大的一个战略错误。</p>
+  <h2 style="margin:36px 0 16px;padding-left:12px;border-left:4px solid #E8552D;color:#2B2B2B;font-size:20px;font-weight:700;line-height:1.45;">主要观点</h2>
+  <ul style="margin:0 0 22px;padding-left:22px;color:#2B2B2B;">
+    <li style="margin:0 0 12px;font-size:16px;line-height:1.85;color:#2B2B2B;"><strong style="color:#E8552D;">第一，算力该买还是该租，是可以算出来的。</strong> 按他的口径，一块 H100 买 3 万美元，租一年要 3.5 万到 5 万美元；保修 3 年，实际能用近 10 年。</li>
+    <li style="margin:0 0 12px;font-size:16px;line-height:1.85;color:#2B2B2B;"><strong style="color:#E8552D;">第二，排队比价格更重要。</strong> 自己买卡能跳过 hyperscaler 的采购队列，等于提前一年拿到最新架构，这笔钱换的是时间窗口。</li>
+    <li style="margin:0 0 12px;font-size:16px;line-height:1.85;color:#2B2B2B;"><strong style="color:#E8552D;">第三，"芯片会折旧"这件事被讲反了。</strong> 训练确实需要新卡，但推理可以一直用旧卡——他们今天还在用 K80 和 A100。</li>
+    <li style="margin:0 0 12px;font-size:16px;line-height:1.85;color:#2B2B2B;"><strong style="color:#E8552D;">第四，Nvidia 真正的动作是给 GPU 造了一个二级市场。</strong> 联合 Blackstone、BlackRock、Apollo、Goldman Sachs 承保最多 25% 的 GPU 价值，让银行敢放贷、让 GPU 有了价格下限。</li>
+    <li style="margin:0 0 12px;font-size:16px;line-height:1.85;color:#2B2B2B;"><strong style="color:#E8552D;">第五，他犯过最大的战略错误，是把 API 当成会被商品化（commoditize）的生意。</strong> 2022 年他判断文本转语音 API 迟早会被本地模型替代，于是没有下场做 B2B，结果被 11 Labs 反超。</li>
+    <li style="margin:0 0 12px;font-size:16px;line-height:1.85;color:#2B2B2B;"><strong style="color:#E8552D;">第六，AI 时代要招的是斜率（slope），不是截距（intercept）。</strong> 教材读了多少、手写代码多漂亮在贬值，原始技术天赋和饥饿感在升值。</li>
+    <li style="margin:0 0 12px;font-size:16px;line-height:1.85;color:#2B2B2B;"><strong style="color:#E8552D;">第七，token 用量排行榜是最糟糕的激励。</strong> 只有上了生产、没有 bug、用户在真的用，才算交付；烧 token 烧在两周的长时程任务上是对的，烧在五个小时的无用功上是错的。</li>
+    <li style="margin:0 0 12px;font-size:16px;line-height:1.85;color:#2B2B2B;"><strong style="color:#E8552D;">第八，算力、数据、团队，缺一样就被限速。</strong> 团队之所以最重要，是因为团队能拿到另外两样。</li>
+  </ul>
+  <h2 style="margin:36px 0 16px;padding-left:12px;border-left:4px solid #E8552D;color:#2B2B2B;font-size:20px;font-weight:700;line-height:1.45;">一、把 GPU 当资产买：一笔任何人都能复算的账</h2>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">2022 年，Speechify 买了自己的第一台 GPU 机架，用途是训练。当时他们租算力，然后发现一件很有意思的事：<strong style="color:#E8552D;">工程师会心疼公司的钱</strong>。GPU 按小时计费，用多了心里发怵，于是能不跑的实验就不跑。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">Cliff 和他哥哥的类比是：假设你是迈克尔·乔丹，你唯一在乎的事情就是打进 NBA，但你每次进篮球馆训练都要按小时付 20 美元——你当然想要一个随时能进的场馆。事实上，你想要的是家里就有一个篮筐。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">第一次买卡的效果很好，于是他们越买越多。后来这笔账越来越清楚：</p>
+  <ul style="margin:0 0 22px;padding-left:22px;color:#2B2B2B;">
+    <li style="margin:0 0 12px;font-size:16px;line-height:1.85;color:#2B2B2B;">一块 H100 大概 3 万美元；租一年 3.5 万到 5 万美元，<strong style="color:#E8552D;">租金是买价的 1.5 倍</strong>；</li>
+    <li style="margin:0 0 12px;font-size:16px;line-height:1.85;color:#2B2B2B;">硬件保修 3 年，但在他判断里，"这种资产会留很久"，因为 GPU 待在恒温恒湿、有专人维护的机房里，几乎不产生磨损；</li>
+    <li style="margin:0 0 12px;font-size:16px;line-height:1.85;color:#2B2B2B;">更关键的约束来自训练本身：要做大规模训练，显存必须和一大批 GPU 共置（co-located），纯靠租用 hyperscaler 的 spot instance，做不到他要的规模；</li>
+    <li style="margin:0 0 12px;font-size:16px;line-height:1.85;color:#2B2B2B;">如果只是跑开源模型做推理，自己硬件上的 token 成本是"零头的零头"。</li>
+  </ul>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">他还有一句更直白的财务表述：如果你有过剩的资本，存在银行或者买长期债券，收益率大概 5%；而买一块 GPU 再租出去，一年期的回报远高于这个数字。</p>
+  <h2 style="margin:36px 0 16px;padding-left:12px;border-left:4px solid #E8552D;color:#2B2B2B;font-size:20px;font-weight:700;line-height:1.45;">二、10 万美元插队费，是一笔理性交易</h2>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">大部分人以为买 GPU 是去找 Nvidia。Cliff 说不是：<strong style="color:#E8552D;">Nvidia 不会花时间跟一个创始人聊，真正给你供货的是 Dell</strong>。"大家以为 Dell 是 PC 公司，其实它现在是 GPU 机架供应商。"</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">而 Dell 也有产能约束，货源可能在法国。他在节目里讲了一个很具体的场景：货说好一个月到，结果没到；数据中心的空间是按时间租的，卡没到，机房的钱照付；于是他打电话过去，一边威胁要换供应商，一边问能不能加钱插队。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">答案是：可以。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">这就是那 10 万美元的逻辑。买到的不只是卡，是<strong style="color:#E8552D;">跳过队列的时间</strong>——如果等 Google 先买完、再等前面的人排完，最新一代卡要等上很久；自己买，等于提前一年摸到新架构，而这一年正好用在最需要试错的训练上。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">代价是一整套硬件公司的活：一车 GPU 的保险、液冷 sidecar 的改装审批、InfiniBand 布线、机房能源配额。他特别提到，<strong style="color:#E8552D;">现在最大的约束已经不是芯片，而是电力</strong>。</p>
+  <h2 style="margin:36px 0 16px;padding-left:12px;border-left:4px solid #E8552D;color:#2B2B2B;font-size:20px;font-weight:700;line-height:1.45;">三、"GPU 不是 iPhone"：折旧被讲反了</h2>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">主持人抛出的质疑很标准：芯片会折旧，架构在加速迭代，买卡是不是把自己锁死在一种架构上？</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">Cliff 的回答分两层。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">第一层是训练和推理要分开看。训练是竞争，你有一个假设要尽快验证，晚一分钟就是别人先知道答案，所以要用快几个数量级的新架构；但推理不是，Speechify 的语音转文字、文字转语音"只要能在一百毫秒内返回就行"，<strong style="color:#E8552D;">他们今天还在用 K80 和 A100 做很多推理任务</strong>。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">第二层是使用率。他给了一个 iPhone 的类比：你买过 iPhone 3G，后来又买了新 iPhone，抽屉里躺着五部用不上的手机，因为你一次只能用一部；但如果你有 10 万块 GPU，你可以让它们<strong style="color:#E8552D;">同时</strong>全部干活。所以他既买也租，而且两边都不手软。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">具体的产能规划，他讲得很细：把平均用量的约 20% 用自有硬件覆盖（因为这是最划算的部分），再拿约 25% 签 hyperscaler 的长约，剩下的用 spot instance 顶着，这样既不缺产能也不过度承诺。需求和季节强相关——9 月开学、10 月是高峰、11 月是基准、12 月掉到 80%。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">他甚至把算力和团队规模直接挂钩：现在 45 名工程师，目标是 150 名；团队里几个明星工程师有专属的 DGX 机架；还有大约四分之一的人"在等场地训练"，就像橄榄球队需要第二块训练场。</p>
+  <h2 style="margin:36px 0 16px;padding-left:12px;border-left:4px solid #E8552D;color:#2B2B2B;font-size:20px;font-weight:700;line-height:1.45;">四、Nvidia 真正在做的事：给 GPU 造一个二级市场</h2>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">节目里最容易被忽略、但信息量最大的一段，是 Cliff 讲 Nvidia 和华尔街的那笔合作。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">按他的说法，Nvidia 找了 Blackstone、BlackRock、Apollo、Goldman Sachs，说：我们想让更多人买 GPU，你们借钱给买卡的人，<strong style="color:#E8552D;">我们为 GPU 价值的最高 25% 承保</strong>——如果借款方破产，抵押物是那块 GPU，Nvidia 最多按 25% 的价值把它买回去。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">这一步的效果是：银行有了放贷的动机和更便宜的利率，GPU 有了流动性更好的二级市场，也就有了一个价格下限。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">他把它类比成 Solar City：当年 Elon 做的事，本质上就是说服 Morgan Stanley 和 Merrill Lynch，让太阳能板可以作为一个 30 年期的贷款标的。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">那么，围绕 Nvidia 的"循环融资"担忧成立吗？他的回答是分开的：一年前 Oracle 和 OpenAI 之间那种安排"太夸张了，太离谱了"；但 Nvidia 不一样，<strong style="color:#E8552D;">因为 GPU 是真实资产</strong>。比特币的内在价值说不清，黄金至少还能做首饰和医疗，而 GPU 的价值可以用一个指标衡量——<strong style="color:#E8552D;">这块设备每秒能做多少万亿次浮点运算（teraflops per second）</strong>。卡在冰岛还是在亚利桑那，都不影响它对全世界有用。</p>
+  <h2 style="margin:36px 0 16px;padding-left:12px;border-left:4px solid #E8552D;color:#2B2B2B;font-size:20px;font-weight:700;line-height:1.45;">五、他承认的最大错误：以为 API 会商品化</h2>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">这一期最锋利的部分，是主持人的追问："你之前说 11 Labs 反超了你，这是不是你自己的问题？"</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">Cliff 的回答没有任何修饰：<strong style="color:#E8552D;">"100% 是我的问题。这是我在 Speechify 历史上犯过的最大的战略错误。"</strong></p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">2022 年，他人在伦敦，见了 11 Labs 的两位创始人。他当时的判断是：这两个人很聪明，会做得不错，但他不看好他们的策略——文本转语音的 API 迟早会商品化，早晚能在电脑上、手机上本地跑，那他们还卖什么？所以他不打算进这个生意。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">他复盘时说的这段话，值得所有做 AI 产品的人抄下来：</p>
+  <p style="margin:0 0 20px;padding:14px 18px;background:#EFE8DB;border-left:3px solid #E8552D;font-size:16px;line-height:1.8;color:#4a463f;">"我没理解的是，一家 AI 实验室的意义在于持续创新，你发布的第一个产品只是楔子（wedge），它让别人之后来用你其他的技术。"</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">比如文本转语音：先做全世界最好的一个音色，然后是更多音色，然后是情感表达，然后是声音克隆，然后是语音转文字，然后是把打断、抢话、笑声都处理好的双向（duplex）模型，然后是语音对话的 harness，再往后是针对销售、客服场景做优化。一层一层往上走。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">而被他自己低估的那一步更关键：<strong style="color:#E8552D;">当产品变成 agent，买单的人就不再是软件工程师，而是 CTO、CIO、CEO</strong>。他提到 Sierra 提出的"按结果定价"（outcome-based pricing），并说 Brett Taylor 做得非常好——拥有一个 AI agent，就像拥有一个 AI 同事。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">对比一下两边的规模，这个故事更刺眼：Speechify 在 B2C 的文本转语音里，据他说占了应用商店该品类 98% 的装机量，累计为 6000 万用户念过 7700 亿个词，折合大约 6000 年的收听时长。而 11 Labs 走 B2B，直接反超。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">成本结构也完全不同：按 Cliff 在节目里的说法，11 Labs 每百万字符约 100 美元，OpenAI 某个模型在基准里是每百万字符 196 美元，而 Speechify 新发布的 Simba 3.2 API 定价是每百万字符 10 美元。他的原话是，B2C 的单价约束逼着他们把成本压到每百万字符 10 美元以内——这个约束反过来变成了 B2B 的武器。</p>
+  <h2 style="margin:36px 0 16px;padding-left:12px;border-left:4px solid #E8552D;color:#2B2B2B;font-size:20px;font-weight:700;line-height:1.45;">六、compound startup：不下场本身就是最大的风险</h2>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">主持人问他：都说每个创业公司都得变成 compound startup（复合型公司），这话对吗？</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">他的修正很精确：不是"必须"，而是<strong style="color:#E8552D;">到某个阶段你就负担不起不这么做</strong>。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">他用来解释领导力的比喻更狠："你不想做一个坐在后面喊'把那座山头拿下来'的肥胖管理者。你要做那个第一个拔剑冲上去的战士。"对应到产品上就是：<strong style="color:#E8552D;">你必须是自己 B2C 产品的头号用户</strong>；同时必须有前 deployed 工程师（forward deployed engineer）扎在 B2B 客户现场，否则你永远不会知道下一个产品该是什么。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">"最好的输法，是不在赛道上。要在赛道上。"（The best way to lose is not to be in the race. Be in the race.）</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">他不是不知道对手有多强。他直接说不想跟 Brett Taylor 竞争，也说 11 Labs 已经是"不可阻挡的机器"，政府订单已经铺进主要西方国家。但他给出的路径是：<strong style="color:#E8552D;">核心 API 上打质量、速度和 10 倍便宜；同时必须做 agent，因为那里有大量还没被解锁的价值</strong>。至于客服这个赛道，他反而很克制——18 个月里有 18 家以上公司融了超过 1 亿美元，而 Sophisticated buyer 早就在自建，"我不能给你一个比下一个人好 10 倍的东西"。</p>
+  <h2 style="margin:36px 0 16px;padding-left:12px;border-left:4px solid #E8552D;color:#2B2B2B;font-size:20px;font-weight:700;line-height:1.45;">七、招聘：招斜率，不招截距</h2>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">谈到 AI 时代的团队，他的观察集中在一点：<strong style="color:#E8552D;">招聘标准本身变了</strong>。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">过去他非常看重候选人读过多少软件工程教材、手写代码是否漂亮；现在这部分依然重要，但他最看重的是原始技术天赋。他的原话是，只要有饥饿感、工作伦理和智力，"其他所有东西我们都能教你，六个月后你就能变成一台机器"。所以他开始大量招数学奥赛选手、LeetCode 选手、Kaggle 获奖者、学物理和数学的人——有些人甚至之前没写过代码。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">面试方式也变了：</p>
+  <ul style="margin:0 0 22px;padding-left:22px;color:#2B2B2B;">
+    <li style="margin:0 0 12px;font-size:16px;line-height:1.85;color:#2B2B2B;">功能性面试：给你一个东西，你做出来，然后跑单元测试；</li>
+    <li style="margin:0 0 12px;font-size:16px;line-height:1.85;color:#2B2B2B;">给一个大型代码库（甚至就是开源仓库），看你能否理解它、改它、以及你弄坏了什么；</li>
+    <li style="margin:0 0 12px;font-size:16px;line-height:1.85;color:#2B2B2B;">必须会编排 agent。不会这一项的候选人，"基本不值得要"。</li>
+  </ul>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">他给这个岗位下的定义也变了：<strong style="color:#E8552D;">"我要的是每天做出 10 个真正好决定的人。"</strong> 代码本身不再稀缺，稀缺的是判断力，因为每个工程师手上同时跑着 5 到 18 个 agent，在做长时程任务。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">薪酬那一部分，是这期最像行业切片的内容。他说 Anthropic 和 OpenAI 招人，年度薪酬包的起点是 1500 万美元；他说自己见过 CRO 的包超过 5000 万美元；他还纠正了主持人"种子轮"的说法——主持人举的例子，其实是融了 1.5 亿美元、估值更高的公司，而这样的公司有三四十家。他的结论是反直觉的：<strong style="color:#E8552D;">对成长期公司来说，这是史上最难招人的时候；对种子期公司来说，反而是最容易的时候</strong>，因为一个聪明且勤奋的人加上 agent，能立刻产生的杠杆比过去大得多。</p>
+  <h2 style="margin:36px 0 16px;padding-left:12px;border-left:4px solid #E8552D;color:#2B2B2B;font-size:20px;font-weight:700;line-height:1.45;">八、不要看 token 排行榜，看上没上生产</h2>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">主持人对 token 用量排行榜的评价是"最糟糕的激励形式"，Cliff 给了一套替代方案。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">他说自己只认证一种交付：<strong style="color:#E8552D;">上生产、没 bug、用户在真的用</strong>。他用的比喻是送牛奶——你做出了一瓶漂亮的牛奶，放在路边就走，牛奶会坏掉；你必须送到我家门口、敲我的门。或者用体育的说法：把球带到边线不算，带到篮筐下面也不算，<strong style="color:#E8552D;">球必须进网</strong>。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">判断 agent 任务的好坏也一样，要看目标选得对不对：</p>
+  <ul style="margin:0 0 22px;padding-left:22px;color:#2B2B2B;">
+    <li style="margin:0 0 12px;font-size:16px;line-height:1.85;color:#2B2B2B;">好的用法：一个 agent 跑了两个星期的长时程任务，烧掉 12500 美元的 token，最后做出一个更好的模型——这是完美的 token 用法；</li>
+    <li style="margin:0 0 12px;font-size:16px;line-height:1.85;color:#2B2B2B;">坏的用法：五个小时烧掉 12000 个 token，做了一件完全没必要的事。</li>
+  </ul>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">他引用了 Claude Code 团队的说法：<strong style="color:#E8552D;">关键在循环（loop）</strong>——先定目标，再定如何衡量目标，然后对着目标反复迭代，直到达到为止。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">工具偏好他也说得很直接：Claude Code 第一，Cursor 第二，Codex 有一些但不多。"我们希望你用尽可能多的 token，用最适合你的 harness。"</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">至于这种"token 狂飙"是不是普遍现象，他的态度很清醒：现实和概念之间是有差距的，不能过火，<strong style="color:#E8552D;">小功能烧 15000 个 token 是会让人发疯的</strong>，因为工程师的天性就是优化——一个好的工程师会盯着 agent，让它走阻力最小的路，而不是路径最长的路。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">他还讲了一个具体的例子：他给 AI 团队提了 14 条修改意见，然后翻转手机摄像头在 Zoom 里当场演示 bug，把录屏发进群里。第二天早上，一个 19 岁的工程师发来了 demo，把所有问题都解决了。原因很简单——他在等三个训练任务跑完，"反正有点空，就把你提的都做了"。</p>
+  <h2 style="margin:36px 0 16px;padding-left:12px;border-left:4px solid #E8552D;color:#2B2B2B;font-size:20px;font-weight:700;line-height:1.45;">九、算力、数据、团队：三件套缺一不可</h2>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">Cliff 把一家 AI 公司的资源结构总结成三样：<strong style="color:#E8552D;">数据、算力、架构</strong>。而团队之所以排第一，是因为"团队能帮你拿到其他资源"。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">数据这一环，他的判断和大多数人不一样。他确实买过小型数据集，也认为像 Fireworks、Mercor 这样的数据供应公司会越来越重要——逻辑是：每家公司都会训练自己的专有模型，那么买家就会从前沿实验室扩展到所有需要补充数据的大型企业。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">但他同时提醒这是一个<strong style="color:#E8552D;">风险很高的生意</strong>：数据交易不是 ARR（年度经常性收入），是一次性交易；买家没有义务回头再买；而且你必须有非常强的合规与赔偿（indemnification）能力，因为买家之所以买，部分原因就是不想自己承担数据来源的法律风险。要在这个生意里胜出，你得是一个"运营怪物"。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">他也提醒了一件事：训练数据本身也要花算力去清洗。他团队里最好的一位工程师现在不写模型，而是在做合成数据集——<strong style="color:#E8552D;">清洗数据这件事，本身就是算力消耗大户</strong>。</p>
+  <h2 style="margin:36px 0 16px;padding-left:12px;border-left:4px solid #E8552D;color:#2B2B2B;font-size:20px;font-weight:700;line-height:1.45;">十、最后，他把这套算力用在了家人的病上</h2>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">节目最后一部分，从商业突然转到了私人。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">他有一位家人患了严重的自身免疫性神经炎症，病了六年，属于典型的"孤儿病"——患者太少，没人觉得值得为它投入。于是他连着 15 周，每周采一次血，把样本送去做基因组测序、蛋白质组学分析和 RNA 分析，同时记录每天的自评数据；六年多的数据，最后全部跑在他的 GPU 集群上。<strong style="color:#E8552D;">他找到了很多医生说不出来的线索。</strong></p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">现在他在做下一步：组织同一个病友群的病友做基因组测序，把所有基因组放在一个巨型 GPU 集群上比对，去找表观遗传（epigenetic）层面的共同线索。往下走的路他也很清楚——用 AlphaFold（Isomorphic）设计出问题的那段蛋白，再设计能结合上去的小分子；用 CRISPR；用 Twist 这样的公司合成 RNA 或 DNA 序列，寄回实验室；而全基因组测序的设备，已经是"一台能放进兜里、大概 5000 美元"的东西。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">他讲这段时没有任何煽情的修辞，只补了自己的来路：8 岁那年他学不会阅读，是父亲把《哈利·波特》打开念给他听；13 岁搬到美国，他一句英语都不会，就把同一套有声书连听了 22 遍。<strong style="color:#E8552D;">技术解决了他的阅读障碍（dyslexia），解决了他的 ADHD，现在要解决他兄弟的病。</strong></p>
+  <h2 style="margin:36px 0 16px;padding-left:12px;border-left:4px solid #E8552D;color:#2B2B2B;font-size:20px;font-weight:700;line-height:1.45;">结尾：账算清楚了，剩下的就是下场</h2>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">这期播客表面上是聊 GPU 该买还是该租，实际上在聊一个更朴素的结构：<strong style="color:#E8552D;">团队、算力、数据、架构，哪一个都不能缺，而团队是唯一能帮你把其他三项找齐的东西。</strong></p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">Cliff 的账之所以值得听，是因为他把很多人当成"成本项"的东西当成了"资产项"：GPU 是资产，因为它有二级市场和内在价值；agent 是资产，因为它把一个人的判断力放大了 5 到 18 倍；错误也是资产，因为他能非常清楚地讲出自己错在哪一年、错在哪个判断上。</p>
+  <p style="margin:0 0 20px;font-size:16px;line-height:1.85;color:#2B2B2B;">落到可执行的一步：如果你正在做 AI 产品，先把两笔账算出来——<strong style="color:#E8552D;">自建与租用算力的三年总成本</strong>，以及<strong style="color:#E8552D;">你的团队里有多少人在真正做决策、多少人在做可被 agent 替代的执行</strong>。第一笔账决定你的毛利率上限，第二笔账决定你的组织上限。</p>
+  <p style="margin:0 0 20px;font-size:13px;line-height:1.8;color:#8a8378;">（完）</p>
+  <p style="margin:0 0 20px;font-size:13px;line-height:1.8;color:#8a8378;">粽子AI世界 · Deconstruct to Connect</p>
+
+</section>
+
+</html>
