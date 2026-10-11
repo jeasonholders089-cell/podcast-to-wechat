@@ -17,11 +17,12 @@
     "body": "font-size:16px;line-height:1.95;color:#2B2B2B;margin:0 0 18px;letter-spacing:0.02em;",
     "speakerLabel": "display:inline-block;background:#FBE3D6;color:#C24A22;font-size:13px;font-weight:600;padding:2px 8px;border-radius:4px;margin:0 6px 0 0;letter-spacing:0.04em;",
     "speakerPara": "font-size:16px;line-height:1.95;color:#2B2B2B;margin:0 0 18px;letter-spacing:0.02em;",
-    "sectionTitle": "font-size:19px;font-weight:700;color:#2B2B2B;line-height:1.6;margin:34px 0 16px;padding-left:10px;border-left:3px solid #E8552D;",
+    "sectionTitle": "font-size:19px;font-weight:700;color:#2B2B2B;line-height:1.6;margin:34px 0 16px;",
     "sectionNumber": "color:#E8552D;font-weight:700;margin-right:8px;",
     "note": "background:#F5F1E9;border-radius:6px;padding:14px 16px;font-size:14px;line-height:1.8;color:#4A4A4A;margin:0 0 22px;",
     "noteTitle": "font-weight:700;color:#C24A22;margin:0 0 6px;font-size:14px;",
     "sourceBox": "border:1px solid #E3DCD0;border-radius:6px;padding:14px 16px;margin:0 0 24px;font-size:14px;line-height:1.9;color:#4A4A4A;",
+    "sourceTitle": "font-weight:700;color:#C24A22;font-size:14px;margin:0 0 8px;letter-spacing:0.04em;",
     "sourceLabel": "color:#C24A22;font-weight:600;",
     "bullet": "font-size:16px;line-height:1.9;color:#2B2B2B;margin:0 0 10px 0;padding-left:2px;",
     "strong": "color:#C24A22;font-weight:700;"

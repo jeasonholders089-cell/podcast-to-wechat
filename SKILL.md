@@ -45,7 +45,7 @@ description: 「粽子AI世界」公众号内容全流程。从 YouTube 播客�
 | --- | --- | --- |
 | `search_videos.mjs` | 0 | 支持逗号分隔多查询词；自动去重、补精确时长与发布日期、按窗口筛，输出「可做 / 跳过 + 原因」 |
 | `fetch_transcript.mjs` | ① | TikHub 一次同步调用取全文；落盘逐字稿与 `video-meta.json`（来源四项从这里抄） |
-| `check_ai_flavor.mjs` | ②.5 | 破折号 / 碎片回合 / 正文图 / 首尾编译说明 / 来源四项 / 字数 ≥逐字稿 1/3 / AI 腔词表；退出码非 0 即 FAIL |
+| `check_ai_flavor.mjs` | ②.5 | 破折号 / 碎片回合 / 正文图 / 文末编译说明 / 来源四项 / 字数 ≥逐字稿 1/3 / AI 腔词表；退出码非 0 即 FAIL |
 | `render_article.mjs` | ③ | Markdown → 内联样式 HTML；丢弃 H1、剥离外链、丢弃正文图、小节自动编号、说话人标签、来源块 |
 | `generate_art.mjs` | ⑤ | 调 AI98 出竖版与方版插画，内置模型降级链（`gpt-image-2` → `2.5-sunburst` → `2.5-flare`）；`CRITICAL FACE REQUIREMENT` 内嵌，不允许手搓绕开 |
 | `make_social_cover.mjs` | ⑤ | 横版 / 贴图 3x4 / 贴图 1x1 / 金句卡，HTML + Chrome 无头截图，中文由 HTML 渲染 |
@@ -84,8 +84,8 @@ node scripts\push_to_wechat_draft.mjs --html <文章.html> --title "…" --diges
 | 写法 | 渲染成 |
 | --- | --- |
 | `# 标题` | 丢弃（规范要求正文无 H1） |
-| 开头 / 结尾的 `> 编译说明` 引用块 | 顶部 / 底部编译说明卡片 |
-| `## 来源` + 下面 4 条列表 | 来源信息块 |
+| 文末的 `> 编译说明` 引用块 | 文末编译说明卡片（写在开头也会被移到文末） |
+| `## 来源` + 下面 4 条列表 | 文末「来源信息」块 |
 | `## 小节标题`（可自带 `01 ` 前缀） | 带编号的小节标题；`主要观点` 这类汇总小节不编号 |
 | 行首 `**主持人**：内容` / `**嘉宾**：内容` | 浅橘底橙字说话人标签 + 段落 |
 | 行内 `**词**` | 朱红橙加粗 |
@@ -96,7 +96,7 @@ node scripts\push_to_wechat_draft.mjs --html <文章.html> --title "…" --diges
 
 1. `check_ai_flavor.mjs` FAIL = 0
 2. 正文 md 图片数 0 且 html `img` 数 0
-3. 首尾编译说明 + 来源四项齐全
+3. 文末编译说明 + 来源四项齐全（来源信息与说明都放文末，正文内不出现）
 4. `check_art_faces.py` 0 废图
 
 外加一条：字数 ≮ 逐字稿承载量的 1/3（防退化成摘要，`--transcript` 校验）。

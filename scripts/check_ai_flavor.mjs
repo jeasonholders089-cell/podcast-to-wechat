@@ -67,17 +67,27 @@ lines.forEach((l, i) => {
 INFO.body_images = imgs.length;
 if (imgs.length) FAIL.push({ rule: "正文配图", detail: `${imgs.length} 张图片，规范要求正文 0 图`, items: imgs.slice(0, 10) });
 
-// ---- 4. 首尾编译说明 ----
+// ---- 4. 编译说明（应在文末）----
 const noteIndexes = lines.map((l, i) => (/^>\s*\S/.test(l.trim()) ? i : -1)).filter((i) => i >= 0);
-const firstNote = noteIndexes[0];
-const lastNote = noteIndexes[noteIndexes.length - 1];
-const bodyStart = lines.findIndex((l) => /^##\s+/.test(l.trim()));
-const hasFrontNote = firstNote !== undefined && (bodyStart < 0 || firstNote < bodyStart);
-const hasBackNote = lastNote !== undefined && lastNote > (bodyStart < 0 ? 0 : bodyStart) + 3;
-INFO.front_note = !!hasFrontNote;
-INFO.back_note = !!hasBackNote;
-if (!hasFrontNote) FAIL.push({ rule: "开头编译说明", detail: "正文前缺少编译说明引用块（以 `> ` 开头）" });
-if (!hasBackNote) FAIL.push({ rule: "结尾编译说明", detail: "结尾缺少编译说明引用块（以 `> ` 开头）" });
+// 正文起点：第一个「非来源」小节
+const bodyStart = lines.findIndex((l) => /^##\s+/.test(l.trim()) && !/^##\s*来源/.test(l.trim()));
+const noteStart = noteIndexes[0];
+const hasNote = noteIndexes.length > 0;
+const noteBeforeBody = hasNote && bodyStart >= 0 && noteStart < bodyStart;
+const sourceLineIndex = lines.findIndex((l) => /^##\s*来源/.test(l.trim()));
+const sourceBeforeBody = sourceLineIndex >= 0 && bodyStart >= 0 && sourceLineIndex < bodyStart;
+INFO.notes = noteIndexes.length;
+INFO.note_at_tail = hasNote && !noteBeforeBody;
+if (!hasNote) FAIL.push({ rule: "编译说明", detail: "缺少编译说明引用块（以 `> ` 开头，写在文末）" });
+if (noteBeforeBody || sourceBeforeBody) {
+  WARN.push({
+    rule: "文末归属",
+    detail: "来源信息 / 编译说明出现在正文之前；排版时会自动移到文末，但建议直接写在文末",
+  });
+}
+if (noteIndexes.length > 1) {
+  WARN.push({ rule: "编译说明", detail: `有 ${noteIndexes.length} 段编译说明，建议只保留文末一段` });
+}
 
 // ---- 5. 来源四项 ----
 const sourceMatch = raw.match(/##\s*来源[\s\S]*?(?=\n##\s|\s*$)/);
@@ -163,7 +173,7 @@ if (args.json) writeFileSync(args.json, JSON.stringify(report, null, 2), "utf8")
 
 console.log(`\n${report.result}  ${FAIL.length} FAIL / ${WARN.length} WARN  —— ${args.md}`);
 console.log(
-  `破折号 ${INFO.dashes} · 碎片回合 ${INFO.fragment_turns} · 正文图 ${INFO.body_images} · 前说明 ${INFO.front_note ? "有" : "无"} · 后说明 ${INFO.back_note ? "有" : "无"} · 来源块 ${INFO.source_found ? "有" : "无"}${INFO.ratio !== undefined ? ` · 字数比 ${(INFO.ratio * 100).toFixed(1)}%` : ""}`,
+  `破折号 ${INFO.dashes} · 碎片回合 ${INFO.fragment_turns} · 正文图 ${INFO.body_images} · 编译说明 ${INFO.notes} 段（${INFO.note_at_tail ? "文末" : "在开头"}） · 来源块 ${INFO.source_found ? "有" : "无"}${INFO.ratio !== undefined ? ` · 字数比 ${(INFO.ratio * 100).toFixed(1)}%` : ""}`,
 );
 for (const f of FAIL) {
   console.log(`\n✗ [${f.rule}] ${f.detail}`);

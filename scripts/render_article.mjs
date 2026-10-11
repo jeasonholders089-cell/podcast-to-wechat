@@ -169,9 +169,22 @@ for (const raw of lines) {
 flushParagraph();
 closeBlock();
 
+// 来源信息与编译说明统一落到文末：写作规范就是这么要求的，这里再兜一层，
+// 免得 agent 把说明块写在开头时，成品又冒出「开头一块说明 + 来源信息」。
+const bodyBlocks = blocks.filter((b) => b.kind !== "source" && b.kind !== "note");
+const tailBlocks = [
+  ...blocks.filter((b) => b.kind === "source"),
+  ...blocks.filter((b) => b.kind === "note"),
+];
+if (blocks.length && bodyBlocks.length && tailBlocks.length) {
+  const firstBody = blocks.findIndex((b) => b.kind !== "source" && b.kind !== "note");
+  if (blocks.slice(0, firstBody).length > 0) stats.moved_to_tail = blocks.slice(0, firstBody).length;
+}
+const orderedBlocks = [...bodyBlocks, ...tailBlocks];
+
 const html = [];
 html.push(`<div style="${S.wrapper}">`);
-for (const b of blocks) {
+for (const b of orderedBlocks) {
   if (b.kind === "lead") {
     html.push(`<p style="${S.lead}">${inline(b.text)}</p>`);
   } else if (b.kind === "para") {
@@ -195,7 +208,12 @@ for (const b of blocks) {
         return `<p style="${S.bullet}">${label ? `<span style="${S.sourceLabel}">${esc(label)}：</span>` : ""}${inline(value)}</p>`;
       })
       .join("");
-    html.push(`<div style="${S.sourceBox}">${rows || `<p style="${S.bullet}">（来源信息待补）</p>`}</div>`);
+    const boxTitle = /^来源/.test(b.title || "") ? "来源信息" : b.title || "来源信息";
+    html.push(
+      `<div style="${S.sourceBox}"><p style="${S.sourceTitle}">${esc(boxTitle)}</p>${
+        rows || `<p style="${S.bullet}">（来源信息待补）</p>`
+      }</div>`,
+    );
   } else if (b.kind === "note") {
     html.push(`<div style="${S.note}"><p style="${S.noteTitle}">编译说明</p><p style="margin:0">${inline(b.text)}</p></div>`);
   }
