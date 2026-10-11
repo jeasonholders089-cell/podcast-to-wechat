@@ -24,19 +24,22 @@
 
 ## 示例
 
-`examples/published/` 里是从公众号同步下来的真实成品，共 41 篇：每篇一个目录，含
+四篇已发布成品。点图进目录，每个目录里有成品 HTML、封面原图和正文首屏截图。
 
-- `文章.html` —— 发布时的排版成品（内联样式，公众号编辑器可直接粘贴的那一版）
-- `封面.jpg` —— 对应的 1280×544 公众号封面
-- `meta.json` —— 标题、日期、media_id
+| | |
+| --- | --- |
+| [![深度｜对话大空头原型：AI 泡沫会怎么破](examples/published/01_2026-10-11_深度-对话大空头原型-AI-泡沫会怎么破/封面.jpg)](examples/published/01_2026-10-11_深度-对话大空头原型-AI-泡沫会怎么破/) | [![深度｜对话 Crusoe CEO：AI 基建的护城河是幻觉？](examples/published/02_2026-10-11_深度-对话-Crusoe-CEO-AI-基建的护城河是幻觉/封面.jpg)](examples/published/02_2026-10-11_深度-对话-Crusoe-CEO-AI-基建的护城河是幻觉/) |
+| [![深度｜对话 Google X：2000 个想法，只毕业 2 成](examples/published/03_2026-10-08_深度-对话-Google-X-2000-个想法-只毕业-2/封面.jpg)](examples/published/03_2026-10-08_深度-对话-Google-X-2000-个想法-只毕业-2/) | [![深度｜对话 OpenAI：Agent 为什么要「有身份」](examples/published/04_2026-10-08_深度-对话-OpenAI-Agent-为什么要「有身份」/封面.jpg)](examples/published/04_2026-10-08_深度-对话-OpenAI-Agent-为什么要「有身份」/) |
 
-索引见 `examples/published/README.md`。
+正文排版效果（以《对话 Google X》为例，完整首屏见 [examples/published/README.md](examples/published/README.md)）：
+
+![正文排版效果](examples/published/03_2026-10-08_深度-对话-Google-X-2000-个想法-只毕业-2/预览.png)
 
 因为发布后的文章仍留在公众号草稿箱里，这份示例可以随时重新同步：
 
 ```bash
-node tools/sync-published-examples.mjs            # 全量同步
-node tools/sync-published-examples.mjs --dry-run  # 只预览，不落盘
+node tools/sync-published-examples.mjs --limit 4   # 同步最新 4 篇
+node tools/sync-published-examples.mjs --dry-run   # 只预览，不落盘
 ```
 
 ## 安装

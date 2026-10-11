@@ -9,7 +9,10 @@
 //        [--limit 50] [--min-html 2000] [--dry-run]
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { join, resolve } from "node:path";
+import { tmpdir } from "node:os";
+import { randomUUID } from "node:crypto";
 
 const ENV_FILES = ["D:/内容生产/.env", "D:/项目/AI内容生产/.env"];
 const API = "https://api.weixin.qq.com";
@@ -20,6 +23,7 @@ function parseArgs(argv) {
     const a = argv[i];
     if (a === "--help" || a === "-h") out.help = true;
     else if (a === "--dry-run") out["dry-run"] = true;
+    else if (a === "--no-preview") out["no-preview"] = true;
     else if (a.startsWith("--")) out[a.slice(2)] = argv[++i];
   }
   return out;
@@ -40,7 +44,7 @@ function loadEnvFile(path) {
 
 const args = parseArgs(process.argv.slice(2));
 if (args.help) {
-  console.log(`用法: node tools/sync-published-examples.mjs [--out examples/published] [--limit 50] [--min-html 2000] [--dry-run]`);
+  console.log(`用法: node tools/sync-published-examples.mjs [--out examples/published] [--limit 4] [--min-html 2000] [--dry-run] [--no-preview]`);
   process.exit(0);
 }
 
@@ -57,6 +61,52 @@ const outRoot = resolve(args.out);
 const limit = Number(args.limit) || 50;
 const minHtml = Number(args["min-html"]) || 0;
 const dryRun = !!args["dry-run"];
+const wantPreview = !args["no-preview"];
+
+const CHROME_CANDIDATES = [
+  process.env.CHROME_PATH,
+  "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+  "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+  "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+  "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
+].filter(Boolean);
+const chrome = CHROME_CANDIDATES.find((p) => existsSync(p));
+
+// 文章排版首屏截图：公众号正文是 HTML 片段，没有 charset，直接截图中文会乱码，所以要包一层
+function makePreview(html, outPath) {
+  if (!chrome) return false;
+  const dir = join(tmpdir(), "wx-preview-" + randomUUID());
+  mkdirSync(dir, { recursive: true });
+  const page = join(dir, "page.html");
+  const wrapped = `<!doctype html><html><head><meta charset="utf-8"><style>
+html,body{margin:0;background:#fff;}
+body{padding:28px;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;}
+</style></head><body>${html}</body></html>`;
+  writeFileSync(page, wrapped, "utf8");
+  try {
+    execFileSync(
+      chrome,
+      [
+        "--headless=new",
+        "--disable-gpu",
+        "--hide-scrollbars",
+        "--no-first-run",
+        "--no-default-browser-check",
+        `--user-data-dir=${join(dir, "profile")}`,
+        "--force-device-scale-factor=1",
+        "--window-size=900,1300",
+        `--screenshot=${outPath}`,
+        "file:///" + page.replace(/\\/g, "/"),
+      ],
+      { stdio: "pipe", timeout: 60000 },
+    );
+    return true;
+  } catch {
+    return false;
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
 
 const token = await (async () => {
   const res = await fetch(`${API}/cgi-bin/stable_token`, {
@@ -91,11 +141,15 @@ console.log(`草稿箱取到 ${items.length} 条`);
 
 function slugify(title) {
   return String(title)
-    .replace(/[｜|？?！!，,。.：:；;、"'“”‘’（）()\[\]【】<>《》\s/\\]+/g, "-")
+    // 去掉标点与 URL 里容易出问题的字符（% # & + 等）
+    .replace(/[｜|？?！!，,。.：:；;、"'“”‘’（）()\[\]【】<>《》%#&+\s/\\]+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "")
     .slice(0, 40);
 }
+
+// 只转义 URL 里真正有歧义的字符；中文原样保留，源码更好读
+const escPath = (p) => String(p).replace(/%/g, "%25").replace(/ /g, "%20").replace(/#/g, "%23").replace(/\?/g, "%3F");
 
 if (!dryRun) mkdirSync(outRoot, { recursive: true });
 
@@ -138,34 +192,42 @@ for (const it of items) {
     }
   }
 
+  let previewName = "";
+  if (wantPreview && makePreview(html, join(dir, "预览.png"))) previewName = "预览.png";
+
   writeFileSync(
     join(dir, "meta.json"),
     JSON.stringify(
-      { title, date, media_id: it.media_id, cover: coverName, cover_url: first.thumb_url || null, html_chars: html.length },
+      { title, date, media_id: it.media_id, cover: coverName, preview: previewName, cover_url: first.thumb_url || null, html_chars: html.length },
       null,
       2,
     ),
     "utf8",
   );
-  rows.push({ index, date, title, dirName, cover: coverName });
-  console.log(`  ${dirName}  html=${html.length}  ${coverName || "(无封面)"}`);
+  rows.push({ index, date, title, dirName, cover: coverName, preview: previewName });
+  console.log(`  ${dirName}  html=${html.length}  ${coverName || "(无封面)"}  ${previewName || "(无预览)"}`);
 }
 
 if (!dryRun && rows.length) {
   const lines = [
     "# 已发布成品示例",
     "",
-    "从公众号同步下来的真实排版成品：每篇一个目录，含 `文章.html`（内联样式，公众号可直接粘贴的那一版）与 `封面`。",
+    "从公众号同步下来的真实排版成品。每篇一个目录，含：",
     "",
-    "同步脚本：`node tools/sync-published-examples.mjs`",
+    "- `文章.html` —— 发布时的排版成品（内联样式，公众号编辑器可直接粘贴的那一版）",
+    "- `封面.jpg` —— 对应的 1280×544 公众号封面",
+    "- `预览.png` —— 正文首屏截图，用来直观看到排版效果",
+    "- `meta.json` —— 标题、日期、media_id",
     "",
-    `共 ${rows.length} 篇。`,
-    "",
-    "| # | 日期 | 标题 | 目录 |",
-    "| --- | --- | --- | --- |",
-    ...rows.map((r) => `| ${r.index} | ${r.date} | ${r.title.replace(/\|/g, "\\|")} | \`${r.dirName}\` |`),
+    "同步脚本：`node tools/sync-published-examples.mjs --limit 4`（`--dry-run` 只预览，`--no-preview` 跳过截图）",
     "",
   ];
+  for (const r of rows) {
+    const base = r.dirName.split("/").pop();
+    lines.push(`## ${r.title}`, "", `${r.date} · [成品 HTML](${escPath(base)}/文章.html)`, "");
+    if (r.cover) lines.push(`![封面](${escPath(base)}/${escPath(r.cover)})`, "");
+    if (r.preview) lines.push(`![排版效果](${escPath(base)}/${escPath(r.preview)})`, "");
+  }
   writeFileSync(join(outRoot, "README.md"), lines.join("\n"), "utf8");
   console.log(`\n写出索引：${join(outRoot, "README.md")}`);
 }
