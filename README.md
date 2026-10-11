@@ -29,7 +29,7 @@
 | | |
 | --- | --- |
 | [![深度｜对话大空头原型：AI 泡沫会怎么破](examples/published/01_2026-10-11_深度-对话大空头原型-AI-泡沫会怎么破/封面.jpg)](examples/published/01_2026-10-11_深度-对话大空头原型-AI-泡沫会怎么破/) | [![深度｜对话 Crusoe CEO：AI 基建的护城河是幻觉？](examples/published/02_2026-10-11_深度-对话-Crusoe-CEO-AI-基建的护城河是幻觉/封面.jpg)](examples/published/02_2026-10-11_深度-对话-Crusoe-CEO-AI-基建的护城河是幻觉/) |
-| [![深度｜对话 Google X：2000 个想法，只毕业 2 成](examples/published/03_2026-10-08_深度-对话-Google-X-2000-个想法-只毕业-2/封面.jpg)](examples/published/03_2026-10-08_深度-对话-Google-X-2000-个想法-只毕业-2/) | [![深度｜对话 OpenAI：Agent 为什么要「有身份」](examples/published/04_2026-10-08_深度-对话-OpenAI-Agent-为什么要「有身份」/封面.jpg)](examples/published/04_2026-10-08_深度-对话-OpenAI-Agent-为什么要「有身份」/) |
+| [![深度｜对话 Google X：2000 个想法，只毕业 2%](examples/published/03_2026-10-08_深度-对话-Google-X-2000-个想法-只毕业-2/封面.jpg)](examples/published/03_2026-10-08_深度-对话-Google-X-2000-个想法-只毕业-2/) | [![深度｜对话 OpenAI：Agent 为什么要「有身份」](examples/published/04_2026-10-08_深度-对话-OpenAI-Agent-为什么要「有身份」/封面.jpg)](examples/published/04_2026-10-08_深度-对话-OpenAI-Agent-为什么要「有身份」/) |
 
 正文排版效果（以《对话 Google X》为例，完整首屏见 [examples/published/README.md](examples/published/README.md)）：
 
