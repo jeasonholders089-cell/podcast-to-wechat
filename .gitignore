@@ -1,0 +1,16 @@
+# 凭证
+.env
+.env.*
+!.env.example
+
+# 运行产物
+*.log
+_probe/
+_staging/
+_tmp-*/
+node_modules/
+
+# 系统
+.DS_Store
+Thumbs.db
+desktop.ini
