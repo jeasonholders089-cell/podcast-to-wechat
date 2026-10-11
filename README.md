@@ -35,11 +35,14 @@
 
 ![正文排版效果](examples/published/03_2026-10-08_深度-对话-Google-X-2000-个想法-只毕业-2/预览.png)
 
-因为发布后的文章仍留在公众号草稿箱里，这份示例可以随时重新同步：
+示例由 [examples/published/selected.json](examples/published/selected.json) 的白名单固定（按 `media_id`），所以公众号继续发文也不会把这两篇顶掉 —— 想换哪篇就改那个文件。
+
+发布后的文章仍留在公众号草稿箱里，这份示例可以随时重新同步：
 
 ```bash
-node tools/sync-published-examples.mjs --limit 4   # 同步最新 4 篇
-node tools/sync-published-examples.mjs --dry-run   # 只预览，不落盘
+node tools/sync-published-examples.mjs              # 按白名单同步
+node tools/sync-published-examples.mjs --limit 4    # 不看白名单，取最新 4 篇
+node tools/sync-published-examples.mjs --dry-run    # 只预览，不落盘
 ```
 
 ## 安装

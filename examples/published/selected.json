@@ -1,0 +1,22 @@
+{
+  "note": "示例白名单。按 media_id 固定选篇，顺序即 README 里的展示顺序。公众号继续发文不会把这里顶掉；想换哪篇，改这个列表再跑一次同步脚本。",
+  "updated_at": "2026-10-11",
+  "items": [
+    {
+      "media_id": "IqVtB44vNlp54F-zzssuH2onfpSpiZWxk6YkMMGthQIaIiv_JwRAf4-65fYyz-Pl",
+      "title": "深度｜对话大空头原型：AI 泡沫会怎么破？"
+    },
+    {
+      "media_id": "IqVtB44vNlp54F-zzssuH6YX_LnDhU-6PVOApoF5-av-YwE9b0T1MRy2Rtore5NO",
+      "title": "深度｜对话 Crusoe CEO：AI 基建的护城河是幻觉？"
+    },
+    {
+      "media_id": "IqVtB44vNlp54F-zzssuH4y1DWWethmTE2PBmLOyotOFLHOtB5urImF7EP14XGEW",
+      "title": "深度｜对话 Google X：2000 个想法，只毕业 2%"
+    },
+    {
+      "media_id": "IqVtB44vNlp54F-zzssuH-qhd78jUvlKuPLHW_zcm6MhrZQxur4_FwTst7uulL7I",
+      "title": "深度｜对话 OpenAI：Agent 为什么要「有身份」"
+    }
+  ]
+}

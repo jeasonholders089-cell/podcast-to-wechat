@@ -7,7 +7,13 @@
 - `预览.png` —— 正文首屏截图，用来直观看到排版效果
 - `meta.json` —— 标题、日期、media_id
 
-同步脚本：`node tools/sync-published-examples.mjs --limit 4`（`--dry-run` 只预览，`--no-preview` 跳过截图）
+选篇由 `selected.json` 的白名单固定（按 media_id），公众号继续发文不会把这里的示例顶掉；想换哪篇改那个文件再跑同步脚本。
+
+```bash
+node tools/sync-published-examples.mjs              # 按白名单同步
+node tools/sync-published-examples.mjs --limit 4    # 不看白名单，取最新 4 篇
+node tools/sync-published-examples.mjs --dry-run    # 只预览不落盘
+```
 
 ## 深度｜对话大空头原型：AI 泡沫会怎么破？
 

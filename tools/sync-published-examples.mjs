@@ -4,9 +4,12 @@
 // 数据来源：微信公众号「草稿箱」接口（cgi-bin/draft/batchget，no_content=0）。
 // 已发布文章会留在草稿箱里，所以这里拿到的就是发布时的排好版成品（内联样式 HTML）与封面。
 //
+// 选篇规则：默认读 <out>/selected.json 里的白名单（按 media_id 固定，顺序即展示顺序），
+// 这样公众号继续发文也不会把示例顶掉；白名单不存在时才回退到「取最新 --limit 篇」。
+//
 // 用法：
 //   node tools/sync-published-examples.mjs [--env-file <path>] [--out examples/published]
-//        [--limit 50] [--min-html 2000] [--dry-run]
+//        [--limit 50] [--min-html 2000] [--dry-run] [--no-preview] [--selected <json>]
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync } from "node:fs";
 import { execFileSync } from "node:child_process";
@@ -62,6 +65,17 @@ const limit = Number(args.limit) || 50;
 const minHtml = Number(args["min-html"]) || 0;
 const dryRun = !!args["dry-run"];
 const wantPreview = !args["no-preview"];
+const selectedPath = args.selected ? resolve(args.selected) : join(outRoot, "selected.json");
+let pins = null;
+if (existsSync(selectedPath)) {
+  try {
+    const cfg = JSON.parse(readFileSync(selectedPath, "utf8"));
+    pins = (cfg.items || []).map((x) => (typeof x === "string" ? x : x.media_id)).filter(Boolean);
+    console.log(`选篇白名单：${selectedPath}（${pins.length} 篇）`);
+  } catch (err) {
+    console.error(`白名单读取失败（${err.message}），回退到取最新 ${limit} 篇`);
+  }
+}
 
 const CHROME_CANDIDATES = [
   process.env.CHROME_PATH,
@@ -123,11 +137,13 @@ const token = await (async () => {
 })();
 
 const items = [];
-for (let offset = 0; offset < limit; offset += 20) {
+// 有白名单时要把草稿箱翻全，才能找到被固定下来的那几篇
+const fetchLimit = pins ? 100 : limit;
+for (let offset = 0; offset < fetchLimit; offset += 20) {
   const res = await fetch(`${API}/cgi-bin/draft/batchget?access_token=${token}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ offset, count: Math.min(20, limit - offset), no_content: 0 }),
+    body: JSON.stringify({ offset, count: Math.min(20, fetchLimit - offset), no_content: 0 }),
   });
   const data = await res.json();
   if (data.errcode) {
@@ -138,6 +154,15 @@ for (let offset = 0; offset < limit; offset += 20) {
   if (items.length >= (data.total_count ?? 0)) break;
 }
 console.log(`草稿箱取到 ${items.length} 条`);
+
+if (pins) {
+  const byId = new Map(items.map((it) => [it.media_id, it]));
+  const missing = pins.filter((id) => !byId.has(id));
+  if (missing.length) console.error(`  白名单里有 ${missing.length} 篇在草稿箱里找不到（可能已删除）：${missing.join(", ")}`);
+  items.length = 0;
+  for (const id of pins) if (byId.has(id)) items.push(byId.get(id));
+  console.log(`按白名单选中 ${items.length} 篇`);
+}
 
 function slugify(title) {
   return String(title)
@@ -219,7 +244,13 @@ if (!dryRun && rows.length) {
     "- `预览.png` —— 正文首屏截图，用来直观看到排版效果",
     "- `meta.json` —— 标题、日期、media_id",
     "",
-    "同步脚本：`node tools/sync-published-examples.mjs --limit 4`（`--dry-run` 只预览，`--no-preview` 跳过截图）",
+    "选篇由 `selected.json` 的白名单固定（按 media_id），公众号继续发文不会把这里的示例顶掉；想换哪篇改那个文件再跑同步脚本。",
+    "",
+    "```bash",
+    "node tools/sync-published-examples.mjs              # 按白名单同步",
+    "node tools/sync-published-examples.mjs --limit 4    # 不看白名单，取最新 4 篇",
+    "node tools/sync-published-examples.mjs --dry-run    # 只预览不落盘",
+    "```",
     "",
   ];
   for (const r of rows) {
