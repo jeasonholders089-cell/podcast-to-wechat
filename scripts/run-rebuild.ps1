@@ -62,8 +62,10 @@ foreach ($item in $batch) {
     continue
   }
 
-  $publishArgs = @("-Slug", $slug, "-Root", $Root, "-SkillsRoot", $SkillsRoot)
-  if ($SkipPush) { $publishArgs += "-SkipPush" }
+  # 同 run-automation：必须 hashtable splat
+  $publishArgs = @{ Slug = $slug; Root = $Root }
+  if ($SkillsRoot) { $publishArgs["SkillsRoot"] = $SkillsRoot }
+  if ($SkipPush) { $publishArgs["SkipPush"] = $true }
   & (Join-Path $PSScriptRoot "publish-episode.ps1") @publishArgs
   $pubExit = $LASTEXITCODE
   if ($pubExit -ne 0) {

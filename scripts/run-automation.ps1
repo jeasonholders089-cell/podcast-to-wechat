@@ -88,8 +88,10 @@ try {
   $slug = Split-Path (Split-Path $candidates[0].FullName -Parent) -Leaf
   Write-Log "episode detected slug=$slug"
 
-  $publishArgs = @("-Slug", $slug, "-Root", $Root, "-SkillsRoot", $SkillsRoot)
-  if ($SkipPush) { $publishArgs += "-SkipPush" }
+  # 必须用 hashtable splat：数组 splat 不会把 -Name 当参数名，会全部按位置参数传，直接 ParameterBindingException
+  $publishArgs = @{ Slug = $slug; Root = $Root }
+  if ($SkillsRoot) { $publishArgs["SkillsRoot"] = $SkillsRoot }
+  if ($SkipPush) { $publishArgs["SkipPush"] = $true }
   Write-Log "invoking publish slug=$slug"
   & (Join-Path $PSScriptRoot "publish-episode.ps1") @publishArgs
   $pubExit = $LASTEXITCODE
