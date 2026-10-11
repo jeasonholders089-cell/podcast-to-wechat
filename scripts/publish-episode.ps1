@@ -54,6 +54,14 @@ function Write-Json {
   [IO.File]::WriteAllText($Path, ($Object | ConvertTo-Json -Depth 8), $utf8NoBom)
 }
 
+# 出错必须留痕：任何未捕获异常都写进产线日志，避免「跑完却没日志」的黑盒
+trap {
+  Write-Log ("FAIL unhandled: {0} - {1}" -f $_.Exception.GetType().Name, $_.Exception.Message)
+  exit 9
+}
+
+Write-Log ("enter slug={0} root={1}" -f $Slug, $Root)
+
 $node   = Resolve-Exe -Name "node"   -Fallbacks @("C:\Program Files\nodejs\node.exe")
 $python = Resolve-Exe -Name "python" -Fallbacks @("C:\Program Files\Python314\python.exe")
 

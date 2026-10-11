@@ -31,6 +31,12 @@ function Write-Log {
   Write-Host $line
 }
 
+# 出错必须留痕
+trap {
+  Write-Log ("FAIL unhandled: {0} - {1}" -f $_.Exception.GetType().Name, $_.Exception.Message)
+  exit 9
+}
+
 # ---------- lock ----------
 if (Test-Path -LiteralPath $lockPath) {
   $age = ((Get-Date) - (Get-Item -LiteralPath $lockPath).LastWriteTime).TotalMinutes
@@ -84,6 +90,7 @@ try {
 
   $publishArgs = @("-Slug", $slug, "-Root", $Root, "-SkillsRoot", $SkillsRoot)
   if ($SkipPush) { $publishArgs += "-SkipPush" }
+  Write-Log "invoking publish slug=$slug"
   & (Join-Path $PSScriptRoot "publish-episode.ps1") @publishArgs
   $pubExit = $LASTEXITCODE
   if ($pubExit -ne 0) { Write-Log "FAIL publish phase exit=$pubExit"; exit $pubExit }
