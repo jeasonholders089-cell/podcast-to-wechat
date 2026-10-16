@@ -67,26 +67,54 @@ lines.forEach((l, i) => {
 INFO.body_images = imgs.length;
 if (imgs.length) FAIL.push({ rule: "正文配图", detail: `${imgs.length} 张图片，规范要求正文 0 图`, items: imgs.slice(0, 10) });
 
-// ---- 4. 编译说明（应在文末）----
+// ---- 4. 主持人提问必须以「？」结尾 ----
+const hostTurns = [];
+lines.forEach((l, i) => {
+  const m = l.trim().match(/^\*\*(主持人|主播|Host)\*\*[：:]\s*(.+)$/);
+  if (!m) return;
+  const said = m[2].trim();
+  // 收尾寒暄（欢迎回来 / 下期见 / 道谢）不是提问，不要求问号
+  if (/(欢迎你回来|欢迎再来|下期见|再见|谢谢|感谢)/.test(said)) return;
+  if (!/[？?]\s*$/.test(said)) hostTurns.push({ line: i + 1, who: m[1], text: said.slice(-34) });
+});
+INFO.host_turns_without_q = hostTurns.length;
+if (hostTurns.length) {
+  FAIL.push({
+    rule: "主持人提问标点",
+    detail: `${hostTurns.length} 轮主持人发言没有以「？」结尾：是提问就补问号，是背景陈述就在结尾补一个真问题`,
+    items: hostTurns.slice(0, 20),
+  });
+}
+
+// ---- 4.1 文末归属：不再输出编译说明，来源信息写在文末 ----
 const noteIndexes = lines.map((l, i) => (/^>\s*\S/.test(l.trim()) ? i : -1)).filter((i) => i >= 0);
-// 正文起点：第一个「非来源」小节
 const bodyStart = lines.findIndex((l) => /^##\s+/.test(l.trim()) && !/^##\s*来源/.test(l.trim()));
-const noteStart = noteIndexes[0];
-const hasNote = noteIndexes.length > 0;
-const noteBeforeBody = hasNote && bodyStart >= 0 && noteStart < bodyStart;
 const sourceLineIndex = lines.findIndex((l) => /^##\s*来源/.test(l.trim()));
 const sourceBeforeBody = sourceLineIndex >= 0 && bodyStart >= 0 && sourceLineIndex < bodyStart;
 INFO.notes = noteIndexes.length;
-INFO.note_at_tail = hasNote && !noteBeforeBody;
-if (!hasNote) FAIL.push({ rule: "编译说明", detail: "缺少编译说明引用块（以 `> ` 开头，写在文末）" });
-if (noteBeforeBody || sourceBeforeBody) {
+if (noteIndexes.length) {
   WARN.push({
-    rule: "文末归属",
-    detail: "来源信息 / 编译说明出现在正文之前；排版时会自动移到文末，但建议直接写在文末",
+    rule: "编译说明",
+    detail: `${noteIndexes.length} 段「> 」引用块：规范已改为不输出编译说明，排版时会被丢弃`,
+    items: noteIndexes.map((i) => ({ line: i + 1, text: lines[i].trim().slice(0, 60) })),
   });
 }
-if (noteIndexes.length > 1) {
-  WARN.push({ rule: "编译说明", detail: `有 ${noteIndexes.length} 段编译说明，建议只保留文末一段` });
+if (sourceBeforeBody) {
+  WARN.push({
+    rule: "文末归属",
+    detail: "来源信息出现在正文之前；排版时会自动移到文末，但建议直接写在文末",
+  });
+}
+
+// ---- 4.2 中文里的半角标点 ----
+const halfPunct = [];
+lines.forEach((l, i) => {
+  const hits = l.match(/[\u4e00-\u9fff][,;!?]|[,;!?][\u4e00-\u9fff]/g);
+  if (hits) halfPunct.push({ line: i + 1, text: `${hits.join(" ")} ｜ ${l.trim().slice(0, 40)}` });
+});
+INFO.halfwidth_punct = halfPunct.length;
+if (halfPunct.length) {
+  WARN.push({ rule: "半角标点", detail: `${halfPunct.length} 行里中英标点混用，中文请用全角`, items: halfPunct.slice(0, 20) });
 }
 
 // ---- 5. 来源四项 ----
@@ -173,7 +201,7 @@ if (args.json) writeFileSync(args.json, JSON.stringify(report, null, 2), "utf8")
 
 console.log(`\n${report.result}  ${FAIL.length} FAIL / ${WARN.length} WARN  —— ${args.md}`);
 console.log(
-  `破折号 ${INFO.dashes} · 碎片回合 ${INFO.fragment_turns} · 正文图 ${INFO.body_images} · 编译说明 ${INFO.notes} 段（${INFO.note_at_tail ? "文末" : "在开头"}） · 来源块 ${INFO.source_found ? "有" : "无"}${INFO.ratio !== undefined ? ` · 字数比 ${(INFO.ratio * 100).toFixed(1)}%` : ""}`,
+  `破折号 ${INFO.dashes} · 碎片回合 ${INFO.fragment_turns} · 正文图 ${INFO.body_images} · 主持人问号缺失 ${INFO.host_turns_without_q} · 编译说明 ${INFO.notes} 段 · 半角标点 ${INFO.halfwidth_punct} · 来源块 ${INFO.source_found ? "有" : "无"}${INFO.ratio !== undefined ? ` · 字数比 ${(INFO.ratio * 100).toFixed(1)}%` : ""}`,
 );
 for (const f of FAIL) {
   console.log(`\n✗ [${f.rule}] ${f.detail}`);

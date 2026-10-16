@@ -1,7 +1,7 @@
 {
   "id": "podcast-interview",
   "name": "播客对谈体",
-  "description": "粽子AI世界默认模板。说话人浅橘底橙字小标签、小节 01 编号、行高 1.95、首尾编译说明卡片、来源信息块。",
+  "description": "粽子AI世界默认模板。说话人浅橘底橙字小标签、主持人提问加粗并带浅底、小节 01 编号、行高 1.95、文末来源小字加灰（不再输出编译说明）。",
   "colors": {
     "paper": "#F5F1E9",
     "accent": "#E8552D",
@@ -17,15 +17,18 @@
     "body": "font-size:16px;line-height:1.95;color:#2B2B2B;margin:0 0 18px;letter-spacing:0.02em;",
     "speakerLabel": "display:inline-block;background:#FBE3D6;color:#C24A22;font-size:13px;font-weight:600;padding:2px 8px;border-radius:4px;margin:0 6px 0 0;letter-spacing:0.04em;",
     "speakerPara": "font-size:16px;line-height:1.95;color:#2B2B2B;margin:0 0 18px;letter-spacing:0.02em;",
+    "speakerQuestion": "font-size:16px;line-height:1.95;color:#2B2B2B;margin:0 0 18px;letter-spacing:0.02em;font-weight:600;background:#FAF6F0;border-radius:4px;padding:8px 12px;",
     "sectionTitle": "font-size:19px;font-weight:700;color:#2B2B2B;line-height:1.6;margin:34px 0 16px;",
     "sectionNumber": "color:#E8552D;font-weight:700;margin-right:8px;",
     "note": "background:#F5F1E9;border-radius:6px;padding:14px 16px;font-size:14px;line-height:1.8;color:#4A4A4A;margin:0 0 22px;",
     "noteTitle": "font-weight:700;color:#C24A22;margin:0 0 6px;font-size:14px;",
-    "sourceBox": "border:1px solid #E3DCD0;border-radius:6px;padding:14px 16px;margin:0 0 24px;font-size:14px;line-height:1.9;color:#4A4A4A;",
-    "sourceTitle": "font-weight:700;color:#C24A22;font-size:14px;margin:0 0 8px;letter-spacing:0.04em;",
-    "sourceLabel": "color:#C24A22;font-weight:600;",
+    "sourceBox": "margin:28px 0 0;padding:14px 0 0;border-top:1px solid #ECE6DC;",
+    "sourceTitle": "font-weight:600;color:#9A9A9A;font-size:12px;margin:0 0 6px;letter-spacing:0.08em;",
+    "sourceLabel": "color:#9A9A9A;font-weight:600;",
+    "sourceItem": "font-size:12px;line-height:1.8;color:#9A9A9A;margin:0 0 4px 0;",
     "bullet": "font-size:16px;line-height:1.9;color:#2B2B2B;margin:0 0 10px 0;padding-left:2px;",
-    "strong": "color:#C24A22;font-weight:700;"
+    "strong": "color:#C24A22;font-weight:700;",
+    "underline": "border-bottom:2px solid #E8552D;padding-bottom:1px;font-weight:600;"
   },
   "rules": {
     "maxPushTitleChars": 32,

@@ -73,7 +73,9 @@ node C:\Users\Administrator\.codex\skills\podcast-to-wechat\scripts\check_ai_fla
 
 ### ④ 标题与摘要
 
-给 ≥3 个候选（写进最终回复），并选定一个**推送用标题（≤32 字）**和一个摘要（≤120 字）。
+给 ≥3 个候选（写进最终回复），**其中至少 2 个必须是陈述式判断句**，每个候选标出句式（陈述 / 数字 / 疑问）。默认选陈述式；疑问式只在冲突点非提问不可时才用，且不许连续两期都选疑问式。
+
+再选定一个**推送用标题（≤32 字）**和一个摘要（≤120 字）。摘要写清「谁 + 说了什么反常识的话」。
 
 ### ⑤ 插画
 
@@ -118,7 +120,7 @@ node C:\Users\Administrator\.codex\skills\podcast-to-wechat\scripts\check_ai_fla
 
 | 字段 | 规矩 |
 | --- | --- |
-| `title` | 推送用，**≤32 字**，超了微信 `draft/add` 会拒 |
+| `title` | 推送用，**≤32 字**，超了微信 `draft/add` 会拒；句式以陈述式判断为主，疑问式不连用 |
 | `title_display` | 展示用，可以更长 |
 | `kicker` | 封面上的小字，形如「对话 XX CEO」 |
 | `cover_title` | 封面主标题，`\|` 断行，`**词**` 染橙 |

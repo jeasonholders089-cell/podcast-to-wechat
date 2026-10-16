@@ -2,10 +2,12 @@
 // 微信公众号草稿箱推送
 //   --check                     只验证凭证 / 取 token
 //   --dry-run                   组包但不发送
-//   --list [--count N]          查看草稿箱最近条目
+//   --list [--count N] [--offset M]   查看草稿箱条目（草稿箱上限 77+ 条，按 offset 翻页）
 //   正式推送：--html <file> --title <t> --digest <d> --cover <png> [--author <a>]
+//   原地更新：--update <media_id> --html <file> --title <t> --digest <d> --cover <png> [--index 0]
+//   --out <file>                把结果 JSON 额外写一份到文件（UTF-8），供 PowerShell 读取
 
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 // 先读共享 env，再用产线自己的 .env 覆盖（后者优先）
@@ -25,11 +27,27 @@ function parseArgs(argv) {
 
 const args = parseArgs(process.argv.slice(2));
 
+// Windows PowerShell 5.1 按控制台代码页解码 node 的 stdout，在无控制台的计划任务里会把
+// UTF-8 中文解坏（历史故障：草稿已创建但 ConvertFrom-Json 抛「未终止的字符串」）。
+// 给了 --out 就同时落一份 UTF-8 文件，调用方直接读文件，绕开 stdout 解码。
+function emit(obj) {
+  const text = JSON.stringify(obj, null, 2);
+  console.log(text);
+  if (args.out) {
+    try {
+      writeFileSync(resolve(args.out), text, "utf8");
+    } catch (err) {
+      console.error(`\n✗ 写入 --out 失败：${err.message}`);
+    }
+  }
+}
+
 if (args.help) {
   console.log(`用法:
   node push_to_wechat_draft.mjs --check
   node push_to_wechat_draft.mjs --list --count 5
-  node push_to_wechat_draft.mjs --html <html> --title <t> --digest <d> --cover <png> [--author <a>] [--dry-run]`);
+  node push_to_wechat_draft.mjs --html <html> --title <t> --digest <d> --cover <png> [--author <a>] [--dry-run] [--out <file>]
+  node push_to_wechat_draft.mjs --update <media_id> --html <html> --title <t> --digest <d> --cover <png> [--out <file>]`);
   process.exit(0);
 }
 
@@ -92,7 +110,7 @@ async function listDrafts(token, count) {
   const res = await fetch(`${API}/cgi-bin/draft/batchget?access_token=${token}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ offset: 0, count: Number(count) || 5, no_content: 1 }),
+    body: JSON.stringify({ offset: Number(args.offset) || 0, count: Number(count) || 5, no_content: 1 }),
   });
   const data = await res.json();
   if (data.errcode) fail(`读取草稿箱失败：errcode=${data.errcode} errmsg=${data.errmsg}`, data);
@@ -101,7 +119,8 @@ async function listDrafts(token, count) {
     update_time: new Date((it.update_time ?? 0) * 1000).toISOString(),
     title: (it.content?.news_item ?? []).map((n) => n.title).join(" | "),
   }));
-  console.log(JSON.stringify({ total: data.total_count, items }, null, 2));
+  // 统一走 emit：给了 --out 时同时落一份 UTF-8 文件（列表分页时 PowerShell 读文件更稳）
+  emit({ total: data.total_count, items });
 }
 
 // ---- 主流程 ----
@@ -147,7 +166,7 @@ const payloadPreview = {
 };
 
 if (args["dry-run"]) {
-  console.log(JSON.stringify({ ok: true, dry_run: true, payload: payloadPreview }, null, 2));
+  emit({ ok: true, dry_run: true, payload: payloadPreview });
   process.exit(0);
 }
 
@@ -155,6 +174,42 @@ if (!args.cover) fail("正式推送必须提供 --cover（横版封面）");
 
 const token = await getToken();
 const thumbMediaId = await uploadCover(token, resolve(args.cover));
+
+// ---- 原地更新已有草稿（不新增条目） ----
+if (args.update) {
+  const updateBody = {
+    media_id: args.update,
+    index: Number(args.index ?? 0),
+    articles: {
+      title,
+      author,
+      digest,
+      content,
+      content_source_url: args["source-url"] ?? "",
+      thumb_media_id: thumbMediaId,
+      need_open_comment: 0,
+      only_fans_can_comment: 0,
+    },
+  };
+  const res = await fetch(`${API}/cgi-bin/draft/update?access_token=${token}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updateBody),
+  });
+  const data = await res.json();
+  if (data.errcode) fail(`更新草稿失败：errcode=${data.errcode} errmsg=${data.errmsg}`, data);
+  emit({
+    ok: true,
+    updated: true,
+    media_id: args.update,
+    title,
+    title_chars: cjkLen(title),
+    digest_chars: cjkLen(digest),
+    thumb_media_id: thumbMediaId,
+    duck: "原地更新草稿，未新增条目，未群发",
+  });
+  process.exit(0);
+}
 
 const body = {
   articles: [
@@ -178,17 +233,11 @@ const res = await fetch(`${API}/cgi-bin/draft/add?access_token=${token}`, {
 const data = await res.json();
 if (!data.media_id) fail(`推送失败：errcode=${data.errcode} errmsg=${data.errmsg}`, data);
 
-console.log(
-  JSON.stringify(
-    {
-      ok: true,
-      media_id: data.media_id,
-      title,
-      title_chars: cjkLen(title),
-      thumb_media_id: thumbMediaId,
-      duck: "只进草稿箱，未群发",
-    },
-    null,
-    2,
-  ),
-);
+emit({
+  ok: true,
+  media_id: data.media_id,
+  title,
+  title_chars: cjkLen(title),
+  thumb_media_id: thumbMediaId,
+  duck: "只进草稿箱，未群发",
+});

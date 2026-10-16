@@ -63,8 +63,10 @@ function inline(text) {
   });
   t = t.replace(/\[([^\]]+)\]\(([^)]*)\)/g, "$1");
   t = t.replace(/\*\*([^*]+)\*\*/g, `<strong style="${S.strong}">$1</strong>`);
+  // ==文字== → 朱红橙下划线（重点语句，与加粗形成两级强调）
+  if (S.underline) t = t.replace(/==([^=]+)==/g, `<span style="${S.underline}">$1</span>`);
   t = t.replace(/`([^`]+)`/g, "$1");
-  return esc(t).replace(/&lt;strong style="([^"]*)"&gt;/g, '<strong style="$1">').replace(/&lt;\/strong&gt;/g, "</strong>");
+  return esc(t).replace(/&lt;(\/?)(strong|span)( style="[^"]*")?&gt;/g, "<$1$2$3>");
 }
 
 const lines = readFileSync(args.in, "utf8").replace(/\r\n/g, "\n").split("\n");
@@ -192,7 +194,10 @@ for (const b of orderedBlocks) {
   } else if (b.kind === "bullet") {
     html.push(`<p style="${S.bullet}">· ${inline(b.text)}</p>`);
   } else if (b.kind === "speaker") {
-    html.push(`<p style="${S.speakerPara}"><span style="${S.speakerLabel}">${esc(b.who)}</span>${inline(b.said)}</p>`);
+    // 主持人的提问单独走一个样式：加粗 + 浅底，和嘉宾正文拉开层次
+    const isHost = /主持人|主播|Host/i.test(b.who);
+    const paraStyle = isHost && S.speakerQuestion ? S.speakerQuestion : S.speakerPara;
+    html.push(`<p style="${paraStyle}"><span style="${S.speakerLabel}">${esc(b.who)}</span>${inline(b.said)}</p>`);
   } else if (b.kind === "section") {
     const num =
       RULES.autoNumberSections && b.index
@@ -200,22 +205,21 @@ for (const b of orderedBlocks) {
         : "";
     html.push(`<h2 style="${S.sectionTitle}">${num}${inline(b.title)}</h2>`);
   } else if (b.kind === "source") {
+    const itemStyle = S.sourceItem ?? S.bullet;
     const rows = b.items
       .map((it) => {
         const m = it.match(/^([^：:]{1,6})[：:]\s*(.*)$/);
         const label = m ? m[1] : "";
         const value = m ? m[2] : it;
-        return `<p style="${S.bullet}">${label ? `<span style="${S.sourceLabel}">${esc(label)}：</span>` : ""}${inline(value)}</p>`;
+        return `<p style="${itemStyle}">${label ? `<span style="${S.sourceLabel}">${esc(label)}：</span>` : ""}${inline(value)}</p>`;
       })
       .join("");
     const boxTitle = /^来源/.test(b.title || "") ? "来源信息" : b.title || "来源信息";
     html.push(
       `<div style="${S.sourceBox}"><p style="${S.sourceTitle}">${esc(boxTitle)}</p>${
-        rows || `<p style="${S.bullet}">（来源信息待补）</p>`
+        rows || `<p style="${S.sourceItem}">（来源信息待补）</p>`
       }</div>`,
     );
-  } else if (b.kind === "note") {
-    html.push(`<div style="${S.note}"><p style="${S.noteTitle}">编译说明</p><p style="margin:0">${inline(b.text)}</p></div>`);
   }
 }
 html.push("</div>");
