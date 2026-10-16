@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-// 贴图封面 / 金句卡出图（HTML 排版 + Chrome 无头截图）
+// 贴图封面 / 横版封面 / 金句卡出图（HTML 排版 + Chrome 无头截图）
+// 版式 v2（2026-10-14 改版）：文字带 + 满幅插画 + 品牌条；横版左文右图，文字落在微信 2.35:1 安全区
 // 用法：
-//   node make_social_cover.mjs --name crusoe --title "融完 39 亿|他说壁垒是幻觉" --out-dir <dir>
-//   [--kicker "对话 Crusoe CEO"] [--stat "39 亿|融资额"] [--quote "金句原文"] [--art <png>] [--sizes 3x4,1x1,quote]
-// 中文一律由 Chrome 渲染，不交给生图模型。
+//   node make_social_cover.mjs --name crusoe --title "融完 39 亿|他说壁垒是**幻觉**" --out-dir <dir>
+//   [--kicker "对话 Crusoe CEO"] [--stat "39 亿|融资额"] [--quote "金句原文"] [--art <竖版.png>] [--art-square <方版.png>] [--sizes h,3x4,1x1,quote]
+// 中文一律由 Chrome 渲染，不交给生图模型。标题里 `|` 断行、`**词**` 染橙；字号按行宽自适应。
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync } from "node:fs";
 import { execFileSync } from "node:child_process";
@@ -27,8 +28,7 @@ function parseArgs(argv) {
 
 const args = parseArgs(process.argv.slice(2));
 if (args.help || !args.name || !args.title || !args["out-dir"]) {
-  console.log(`用法: node make_social_cover.mjs --name <slug> --title "第一行|第二行" --out-dir <dir>
-         [--kicker "..."] [--stat "39 亿|融资额"] [--quote "金句"] [--art <png>] [--sizes 3x4,1x1,quote]`);
+  console.log(`用法: node cover-v2.mjs --name <slug> --title "行1|行2" --out-dir <dir> [--kicker ..] [--stat "数字|说明"] [--quote ..] [--art 竖版.png] [--art-square 方版.png] [--sizes h,3x4,1x1,quote]`);
   process.exit(args.help ? 0 : 2);
 }
 
@@ -41,78 +41,90 @@ const CHROME_CANDIDATES = [
 ].filter(Boolean);
 const chrome = CHROME_CANDIDATES.find((p) => existsSync(p));
 if (!chrome) {
-  console.error("找不到 Chrome/Edge 可执行文件，可用 CHROME_PATH 环境变量指定。");
+  console.error("找不到 Chrome/Edge");
   process.exit(1);
 }
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const dataUri = (p) => `data:image/png;base64,${readFileSync(p).toString("base64")}`;
+const plain = (s) => String(s).replace(/\*\*/g, "");
 
-// 标题：`|` 断行，`**词**` 染橙
-const renderTitleLines = (raw) =>
-  raw
-    .split("|")
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => `<div class="tl">${esc(line).replace(/\*\*([^*]+)\*\*/g, `<span class="hl">$1</span>`)}</div>`)
+let artV = null;
+let artS = null;
+if (args.art) {
+  if (!existsSync(args.art)) throw new Error(`找不到插画 ${args.art}`);
+  artV = dataUri(args.art);
+}
+if (args["art-square"]) {
+  if (!existsSync(args["art-square"])) throw new Error(`找不到方版插画 ${args["art-square"]}`);
+  artS = dataUri(args["art-square"]);
+}
+const artFor = (which) => (which === "square" ? artS || artV : artV || artS);
+
+// ---- 标题自适应：按字宽估算，选出不溢出的最大字号 ----
+const charEm = (ch) => {
+  const cp = ch.codePointAt(0);
+  if (/[A-Za-z0-9@#$%&]/.test(ch)) return 0.56;
+  if (ch === " " || ch === "·") return 0.34;
+  if (cp >= 0x2e80) return 1.0;
+  return 0.4;
+};
+const lineEm = (line) => [...plain(line)].reduce((a, ch) => a + charEm(ch), 0);
+
+const titleLines = String(args.title).split("|").map((s) => s.trim()).filter(Boolean);
+function fitTitle(avail, base, min = 52) {
+  const widest = Math.max(...titleLines.map(lineEm));
+  const size = Math.floor(avail / (widest * 1.02));
+  return Math.max(min, Math.min(base, size));
+}
+const renderTitle = (fs) =>
+  titleLines
+    .map((line) => `<div class="tl" style="font-size:${fs}px">${esc(line).replace(/\*\*([^*]+)\*\*/g, `<span class="hl">$1</span>`)}</div>`)
     .join("");
 
-let artDataUri = null;
-if (args.art) {
-  if (!existsSync(args.art)) {
-    console.error(`找不到插画文件: ${args.art}`);
-    process.exit(1);
-  }
-  artDataUri = `data:image/png;base64,${readFileSync(args.art).toString("base64")}`;
-}
+const [statNum, statCap] = args.stat ? String(args.stat).split("|") : ["", ""];
 
-const baseCss = [
-  "* { margin:0; padding:0; box-sizing:border-box; }",
-  `html,body { background:${PAPER}; font-family:"Microsoft YaHei","PingFang SC",sans-serif; color:${INK}; }`,
-  ".canvas { position:relative; overflow:hidden; background:" + PAPER + "; }",
-  ".art { position:absolute; inset:0; background-size:cover; background-position:center top; }",
-  ".scrim { position:absolute; left:0; right:0; top:0; height:62%; background:linear-gradient(180deg, rgba(245,241,233,.95) 0%, rgba(245,241,233,.80) 60%, rgba(245,241,233,0) 100%); }",
-  `.dot { position:absolute; width:132px; height:132px; border-radius:50%; background:${ACCENT}; right:-34px; top:-34px; }`,
-  ".dot span { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-size:62px; font-weight:800; }",
-  ".content { position:relative; padding:96px 84px; height:100%; display:flex; flex-direction:column; }",
-  `.kicker { font-size:30px; color:${ACCENT}; font-weight:700; letter-spacing:.06em; margin-bottom:36px; }`,
-  ".title { font-size:96px; font-weight:800; line-height:1.18; }",
-  ".title .tl { }",
-  `.hl { color:${ACCENT}; }`,
-  ".stat { position:absolute; left:84px; bottom:170px; }",
-  `.stat .num { font-size:104px; font-weight:800; color:${ACCENT}; line-height:1; text-shadow:0 0 16px rgba(245,241,233,.95), 0 0 34px rgba(245,241,233,.9); }`,
-  ".stat .cap { font-size:28px; opacity:.92; margin-top:10px; letter-spacing:.04em; text-shadow:0 0 14px rgba(245,241,233,.95), 0 0 30px rgba(245,241,233,.9); }",
-  ".brand { position:absolute; left:84px; bottom:64px; font-size:26px; letter-spacing:.18em; opacity:.66; }",
-  ".quote { position:relative; padding:120px 88px; height:100%; display:flex; flex-direction:column; justify-content:center; }",
-  `.quote .mark { font-size:150px; color:${ACCENT}; line-height:.7; font-weight:800; }`,
-  ".quote .text { font-size:72px; font-weight:700; line-height:1.42; margin-top:18px; }",
-  ".quote .from { margin-top:52px; font-size:28px; opacity:.66; letter-spacing:.06em; }",
-  ".hwrap { position:relative; width:2048px; height:1152px; overflow:hidden; background:" + PAPER + "; }",
-  ".hscrim { position:absolute; left:0; top:0; bottom:0; width:68%; background:linear-gradient(90deg, rgba(245,241,233,.97) 0%, rgba(245,241,233,.88) 55%, rgba(245,241,233,0) 100%); }",
-  ".hcontent { position:absolute; left:96px; top:120px; width:1080px; }",
-  ".hcontent .title { font-size:112px; font-weight:800; line-height:1.16; }",
-  ".hbrand { position:absolute; left:96px; bottom:72px; font-size:30px; letter-spacing:.18em; opacity:.66; }",
-].join("\n");
+const css = `
+* { margin:0; padding:0; box-sizing:border-box; }
+html,body { background:${PAPER}; }
+.cv { position:relative; overflow:hidden; background:${PAPER};
+  font-family:"Microsoft YaHei","PingFang SC",sans-serif; color:${INK};
+  -webkit-font-smoothing:antialiased; }
+.grain { position:absolute; inset:0; pointer-events:none; z-index:9;
+  background: radial-gradient(115% 85% at 10% 2%, rgba(255,255,255,.50) 0%, rgba(255,255,255,0) 52%),
+              radial-gradient(85% 70% at 92% 100%, rgba(232,85,45,.05) 0%, rgba(232,85,45,0) 62%); }
+.hl { color:${ACCENT}; }
+.rule { width:84px; height:9px; background:${ACCENT}; }
+.kick { font-size:32px; font-weight:700; color:${ACCENT}; letter-spacing:.10em; }
+.tl { font-weight:800; line-height:1.13; letter-spacing:-.005em; }
+.num { font-weight:800; color:${ACCENT}; line-height:1; font-variant-numeric:tabular-nums; }
+.cap { color:rgba(43,43,43,.62); }
+.brand { font-size:27px; letter-spacing:.20em; color:rgba(43,43,43,.84); }
+.latin { font-family:Georgia,"Times New Roman",serif; font-size:21px; letter-spacing:.26em; color:rgba(43,43,43,.42); }
+.strip { display:flex; align-items:center; justify-content:space-between; background:${PAPER}; }
+.artwrap { position:relative; overflow:hidden; flex:1 1 auto; background:${PAPER}; }
+.art { position:absolute; inset:0; background-size:cover; background-repeat:no-repeat; }
+`;
 
-const htmlFor = (body) =>
-  `<!doctype html><html><head><meta charset="utf-8"><style>${baseCss}</style></head><body>${body}</body></html>`;
+const html = (body) => `<!doctype html><html><head><meta charset="utf-8"><style>${css}</style></head><body>${body}</body></html>`;
 
-function shot(html, width, height, outPath) {
-  const dir = join(tmpdir(), "zongzi-cover-" + randomUUID());
+function shot(body, w, h, outPath) {
+  const dir = join(tmpdir(), "zongzi-cover2-" + randomUUID());
   mkdirSync(dir, { recursive: true });
-  const htmlPath = join(dir, "page.html");
-  const profile = join(dir, "profile");
-  writeFileSync(htmlPath, html, "utf8");
+  const htmlPath = join(dir, "p.html");
+  writeFileSync(htmlPath, html(body), "utf8");
   execFileSync(
     chrome,
     [
       "--headless=new",
+      "--no-sandbox",
       "--disable-gpu",
       "--hide-scrollbars",
       "--no-first-run",
       "--no-default-browser-check",
-      `--user-data-dir=${profile}`,
+      `--user-data-dir=${join(dir, "prof")}`,
       "--force-device-scale-factor=1",
-      `--window-size=${width},${height}`,
+      `--window-size=${w},${h}`,
       `--screenshot=${outPath}`,
       "file:///" + htmlPath.replace(/\\/g, "/"),
     ],
@@ -122,49 +134,121 @@ function shot(html, width, height, outPath) {
   return outPath;
 }
 
-const statBlock = args.stat
-  ? (() => {
-      const [num, cap] = String(args.stat).split("|");
-      return `<div class="stat"><div class="num">${esc(num)}</div>${cap ? `<div class="cap">${esc(cap)}</div>` : ""}</div>`;
-    })()
-  : "";
-
-const artLayer = artDataUri
-  ? `<div class="art" style="background-image:url('${artDataUri}')"></div><div class="scrim"></div>`
-  : "";
-const kicker = args.kicker ? `<div class="kicker">${esc(args.kicker)}</div>` : "";
-const titleBlock = `<div class="title">${renderTitleLines(args.title)}</div>`;
-const brandRow = `<div class="brand">粽子AI世界</div>`;
-
 const outDir = args["out-dir"];
 mkdirSync(outDir, { recursive: true });
-const sizes = String(args.sizes).split(",").map((s) => s.trim()).filter(Boolean);
 const produced = [];
 
-for (const size of sizes) {
-  if (size === "3x4") {
-    const body = `<div class="canvas" style="width:1080px;height:1440px">${artLayer}<div class="dot"><span>Z</span></div>
-      <div class="content">${kicker}${titleBlock}</div>${statBlock}${brandRow}</div>`;
-    produced.push(shot(htmlFor(body), 1080, 1440, join(outDir, `封面-${args.name}-贴图3x4.png`)));
+const KICK = args.kicker ? `<div class="kick" style="margin-top:28px">${esc(args.kicker)}</div>` : "";
+const statRow = (numFs, capFs) =>
+  statNum
+    ? `<div style="display:flex;align-items:baseline;gap:16px">
+         <div class="num" style="font-size:${numFs}px">${esc(statNum)}</div>
+         ${statCap ? `<div class="cap" style="font-size:${capFs}px">${esc(statCap)}</div>` : ""}
+       </div>`
+    : "";
+
+for (const size of String(args.sizes).split(",").map((s) => s.trim()).filter(Boolean)) {
+  if (size === "h") {
+    // 横版：左文右图。文字全部落在微信 2.35:1 中心裁切安全区（y 186..966）内
+    const W = 2048,
+      H = 1152,
+      LW = 1010;
+    const fs = fitTitle(LW - 96 - 76, 96);
+    const body = `<div class="cv" style="width:${W}px;height:${H}px">
+      <div style="position:absolute;right:0;top:0;bottom:0;width:${W - LW}px">
+        <div class="art" style="background-image:url('${artFor("portrait")}');background-position:center 30%"></div>
+      </div>
+      <div style="position:absolute;left:${LW - 3}px;top:0;bottom:0;width:3px;background:${ACCENT}"></div>
+      <div class="strip" style="position:absolute;left:0;top:0;bottom:0;width:${LW}px;flex-direction:column;align-items:stretch;justify-content:space-between;padding:186px 76px 172px 96px">
+        <div>
+          <div class="rule"></div>
+          ${KICK}
+          <div style="margin-top:34px">${renderTitle(fs)}</div>
+        </div>
+        <div>
+          ${statNum ? `<div style="margin-bottom:56px">${statRow(84, 26)}</div>` : ""}
+          <div style="height:1px;background:rgba(43,43,43,.13);margin-bottom:26px"></div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between">
+            <div class="brand">粽子AI世界</div>
+            <div class="latin" style="font-size:19px">ZONGZI AI WORLD</div>
+          </div>
+        </div>
+      </div>
+      <div class="grain"></div>
+    </div>`;
+    produced.push(shot(body, W, H, join(outDir, `封面-${args.name}-横版.png`)));
+  } else if (size === "3x4") {
+    const W = 1080,
+      H = 1440,
+      STRIP = 100;
+    const fs = fitTitle(W - 84 - 84, 90);
+    const body = `<div class="cv" style="width:${W}px;height:${H}px;display:flex;flex-direction:column">
+      <div style="padding:76px 84px 40px;background:${PAPER}">
+        <div class="rule"></div>
+        ${KICK}
+        <div style="margin-top:32px">${renderTitle(fs)}</div>
+        ${statNum ? `<div style="margin-top:38px">${statRow(52, 24)}</div>` : ""}
+      </div>
+      <div class="artwrap">
+        <div class="art" style="background-image:url('${artFor("portrait")}');background-position:center 44%"></div>
+      </div>
+      <div class="strip" style="height:${STRIP}px;padding:0 84px;border-top:1px solid rgba(43,43,43,.10)">
+        <div class="brand">粽子AI世界</div>
+        <div class="latin">ZONGZI AI WORLD</div>
+      </div>
+      <div class="grain"></div>
+    </div>`;
+    produced.push(shot(body, W, H, join(outDir, `封面-${args.name}-贴图3x4.png`)));
   } else if (size === "1x1") {
-    const body = `<div class="canvas" style="width:1080px;height:1080px">${artLayer}<div class="dot"><span>Z</span></div>
-      <div class="content" style="padding:80px 72px">${kicker}${titleBlock}</div>${brandRow}</div>`;
-    produced.push(shot(htmlFor(body), 1080, 1080, join(outDir, `封面-${args.name}-贴图1x1.png`)));
+    const W = 1080,
+      H = 1080,
+      STRIP = 92;
+    const fs = fitTitle(W - 76 - 76, 78);
+    const body = `<div class="cv" style="width:${W}px;height:${H}px;display:flex;flex-direction:column">
+      <div style="padding:62px 76px 34px;background:${PAPER}">
+        <div class="rule"></div>
+        ${KICK}
+        <div style="margin-top:28px">${renderTitle(fs)}</div>
+      </div>
+      <div class="artwrap">
+        <div class="art" style="background-image:url('${artFor("square")}');background-position:center 40%"></div>
+      </div>
+      <div class="strip" style="height:${STRIP}px;padding:0 76px;border-top:1px solid rgba(43,43,43,.10)">
+        <div class="brand">粽子AI世界</div>
+        <div class="latin">ZONGZI AI WORLD</div>
+      </div>
+      <div class="grain"></div>
+    </div>`;
+    produced.push(shot(body, W, H, join(outDir, `封面-${args.name}-贴图1x1.png`)));
   } else if (size === "quote") {
-    if (!args.quote) {
-      console.error("跳过 quote：未提供 --quote");
-      continue;
+    if (!args.quote) continue;
+    const W = 1080,
+      H = 1350;
+    // 金句自适应：按可用高度算最大字号，避免长句溢出
+    const qAvail = 880,
+      qMaxH = 620;
+    let qFs = 74;
+    for (; qFs > 40; qFs -= 2) {
+      const cpl = Math.max(1, Math.floor(qAvail / qFs));
+      const lines = Math.ceil([...plain(args.quote)].length / cpl);
+      if (lines * qFs * 1.44 <= qMaxH) break;
     }
-    const body = `<div class="canvas" style="width:1080px;height:1350px">
-      <div class="quote"><div class="mark">“</div><div class="text">${esc(args.quote)}</div>
-      <div class="from">粽子AI世界${args.kicker ? " · " + esc(args.kicker) : ""}</div></div>${brandRow}</div>`;
-    produced.push(shot(htmlFor(body), 1080, 1350, join(outDir, `配图-${args.name}-金句卡.png`)));
-  } else if (size === "h" || size === "horizontal") {
-    const body = `<div class="hwrap">${artDataUri ? `<div class="art" style="background-image:url('${artDataUri}')"></div>` : ""}
-      ${artDataUri ? '<div class="hscrim"></div>' : ""}<div class="dot"><span>Z</span></div>
-      <div class="hcontent">${kicker}${titleBlock}</div><div class="hbrand">粽子AI世界</div></div>`;
-    produced.push(shot(htmlFor(body), 2048, 1152, join(outDir, `封面-${args.name}-横版.png`)));
+    const body = `<div class="cv" style="width:${W}px;height:${H}px">
+      <div style="position:absolute;inset:50px;border:1px solid rgba(43,43,43,.09)"></div>
+      <div style="position:absolute;left:100px;right:100px;top:300px;bottom:230px;display:flex;flex-direction:column;justify-content:flex-start">
+        <div style="font-family:Georgia,serif;font-size:132px;line-height:.56;color:${ACCENT};font-weight:800">&ldquo;</div>
+        <div style="font-size:${qFs}px;font-weight:700;line-height:1.44;margin-top:34px;text-wrap:balance">${esc(args.quote)}</div>
+        <div style="margin-top:52px;display:flex;align-items:center;gap:20px">
+          <div style="width:54px;height:3px;background:${ACCENT}"></div>
+          <div class="cap" style="font-size:27px;letter-spacing:.04em">${esc(args.kicker ? `粽子AI世界 · ${args.kicker}` : "粽子AI世界")}</div>
+        </div>
+      </div>
+      <div style="position:absolute;left:100px;right:100px;bottom:104px;height:1px;background:rgba(43,43,43,.12)"></div>
+      <div style="position:absolute;left:100px;bottom:56px" class="latin">ZONGZI AI WORLD · DECONSTRUCT TO CONNECT</div>
+      <div class="grain"></div>
+    </div>`;
+    produced.push(shot(body, W, H, join(outDir, `配图-${args.name}-金句卡.png`)));
   }
 }
 
-console.log(JSON.stringify({ ok: true, chrome, art: args.art ? "used" : "none", produced }, null, 2));
+console.log(JSON.stringify({ ok: true, produced }, null, 2));

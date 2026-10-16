@@ -176,12 +176,23 @@ if ($SkipPush) {
     --cover $coverHorizontal --dry-run | Out-Host
   if ($LASTEXITCODE -ne 0) { Write-Log "FAIL step8 dry-run exit=$LASTEXITCODE"; exit 6 }
 
+  # node 的 stdout 是 UTF-8，但 Windows PowerShell 5.1 在无控制台的计划任务里按 936 解码，
+  # 中文会被解坏，ConvertFrom-Json 抛「未终止的字符串」（草稿其实已经创建，结果却没记上）。
+  # 所以让 push 脚本额外把结果写成 UTF-8 文件，这里直接读文件。
+  $pushJson = Join-Path $episode "push-result.json"
+  if (Test-Path -LiteralPath $pushJson) { Remove-Item -LiteralPath $pushJson -Force -ErrorAction SilentlyContinue }
   $pushRaw = & $node $pushScript --html $articleHtml --title $meta.title --digest $meta.digest `
-    --cover $coverHorizontal
+    --cover $coverHorizontal --out $pushJson
   $pushExit = $LASTEXITCODE
   $pushRaw | Out-Host
   if ($pushExit -ne 0) { Write-Log "FAIL step8 push exit=$pushExit"; exit 6 }
-  $mediaId = ($pushRaw -join "`n" | ConvertFrom-Json).media_id
+  if (Test-Path -LiteralPath $pushJson) {
+    $pushText = [IO.File]::ReadAllText($pushJson, [Text.Encoding]::UTF8)
+  } else {
+    $pushText = ($pushRaw -join "`n")
+  }
+  $mediaId = ($pushText | ConvertFrom-Json).media_id
+  if (-not $mediaId) { Write-Log "FAIL step8 push: 结果里没有 media_id"; exit 6 }
   Write-Log "ok step8 push media_id=$mediaId"
 }
 
