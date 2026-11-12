@@ -10,7 +10,7 @@ param(
   [string]$Video = "",
   [string]$Root = "D:\项目\AI内容生产",
   [string]$SkillsRoot = "C:\Users\Administrator\.codex\skills",
-  [string]$CodexBin = "C:\Users\Administrator\.vscode\extensions\openai.chatgpt-26.1007.21434-win32-x64\bin\windows-x86_64\codex.real.exe",
+  [string]$CodexBin = "",
   [int]$LockStaleMinutes = 150,
   [switch]$SkipPush
 )
@@ -59,6 +59,26 @@ try {
   $startedAt = Get-Date
   Write-Log "start agent phase"
 
+  # codex 的路径不要写死：VS Code 扩展升级后目录名会变、二进制名也可能变。
+  # 默认按「最新安装的 openai.chatgpt-* 扩展」自动发现；显式传 -CodexBin 时优先用传入值。
+  if ([string]::IsNullOrWhiteSpace($CodexBin) -or -not (Test-Path -LiteralPath $CodexBin)) {
+    $extRoot = Join-Path $env:USERPROFILE ".vscode\extensions"
+    $found = @()
+    if (Test-Path -LiteralPath $extRoot) {
+      $found = @(
+        Get-ChildItem -LiteralPath $extRoot -Directory -Filter "openai.chatgpt-*" -ErrorAction SilentlyContinue |
+          Sort-Object LastWriteTime -Descending |
+          ForEach-Object { Join-Path $_.FullName "bin\windows-x86_64\codex.exe" } |
+          Where-Object { Test-Path -LiteralPath $_ }
+      )
+    }
+    if ($found.Count -gt 0) {
+      $CodexBin = $found[0]
+      Write-Log "resolved codex binary: $CodexBin"
+    } else {
+      throw "codex binary not found: auto-discovery under $extRoot found nothing (pass -CodexBin to override)"
+    }
+  }
   if (-not (Test-Path -LiteralPath $CodexBin)) { throw "codex binary not found: $CodexBin" }
   if (-not (Test-Path -LiteralPath $promptPath)) { throw "prompt not found: $promptPath" }
 
