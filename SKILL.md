@@ -1,6 +1,6 @@
 ---
 name: podcast-to-wechat
-description: 「粽子AI世界」公众号内容全流程。从 YouTube 播客视频做选题、抓逐字稿、编译成全文实录体对谈稿、去 AI 味机检，再排版成公众号可直接粘贴的 HTML、出插画与贴图封面和金句卡、写口播稿与视频切片，最后推进公众号草稿箱；并支持存量批量重做与每 2 小时无人值守跑批。当用户说「做一期内容」「跑一轮产线」「选题 / 抓字幕 / 出封面 / 排版 / 推草稿」「重做存量」时使用。
+description: 「粽子AI世界」公众号内容全流程。从 YouTube 播客视频做选题、抓逐字稿、编译成全文实录体对谈稿、去 AI 味机检，再排版成公众号可直接粘贴的 HTML、出插画与贴图封面和金句卡、把长文压成一套竖版图文笔记、写口播稿与视频切片，最后推进公众号草稿箱；并支持存量批量重做与每 2 小时无人值守跑批。当用户说「做一期内容」「跑一轮产线」「选题 / 抓字幕 / 出封面 / 排版 / 出图文笔记 / 推草稿」「重做存量」时使用。
 ---
 
 # 粽子AI世界 · 公众号内容产线
@@ -10,9 +10,11 @@ description: 「粽子AI世界」公众号内容全流程。从 YouTube 播客�
 | | |
 | --- | --- |
 | 产线根目录（数据 + 凭证 + SOP） | `D:\项目\AI内容生产` |
-| 每期产出目录 | `D:\项目\AI内容生产\公众号产出\<slug>\` |
+| 每期产出目录 | `D:\项目\AI内容生产\公众号产出\<公众号标题>\`（创作期用 slug；发布脚本完成后按标题改名，slug ↔ 目录见 `folder-map.json`） |
 | 人读规范一页版 | `D:\项目\AI内容生产\粽子AI世界-内容生产SOP.md` |
 | 流程细节 | `references/pipeline.md` |
+| 平台规则与合规门槛 | `references/platform-rules.md` |
+| 图文笔记规范 | `references/image-note.md` |
 | 反 AI 腔规则 | `references/anti-ai-rules.md` |
 | 人味化写法 | `references/humanize-guide.md` |
 | 品牌声纹 | `assets/voice-dna.md` |
@@ -21,7 +23,7 @@ description: 「粽子AI世界」公众号内容全流程。从 YouTube 播客�
 
 品牌色：纸面 `#F5F1E9`、朱红橙 `#E8552D`、炭黑 `#2B2B2B`。
 
-## 九环节
+## 十个环节
 
 | # | 环节 | 动作 | 产出 / 门槛 |
 | --- | --- | --- | --- |
@@ -36,6 +38,7 @@ description: 「粽子AI世界」公众号内容全流程。从 YouTube 播客�
 | ⑥ | 口播稿 | 照 `assets/voice-dna.md` 写：钩子 → 一条主线（症状→归因→解法→后果）→ 一句判断；另出抖音 60 秒版 | `口播稿-<slug>.md`（800–1000 字）+ `口播稿-<slug>-60s.md` |
 | ⑦ | 切片 | 3–5 个高亮观点，9:16 竖版 30–60s | `切片-<n>-<slug>.md` |
 | ⑧ | 推草稿箱 | `push_to_wechat_draft.mjs`，先 `--check` / `--dry-run` | 只进草稿箱，不群发 |
+| ⑨ | 图文笔记（每期必出） | 创作半程读 `references/image-note.md` 写两份文案：`<期目录>\图文笔记\spec.json`（图内）和 `正文-<slug>-图文笔记.md`（配图发布的正文，末行必须写清「完整全文可在公众号：粽子AI世界查看」）；`publish-episode.ps1` 调 `make_image_note.mjs` 出图 | `spec.json` + `正文-<slug>-图文笔记.md` + `图文笔记-<n>-*.png`（1080×1440，8–10 页）；缺任一份即 FAIL |
 
 ## 脚本
 
@@ -51,6 +54,7 @@ description: 「粽子AI世界」公众号内容全流程。从 YouTube 播客�
 | `make_social_cover.mjs` | ⑤ | 横版 / 贴图 3x4 / 贴图 1x1 / 金句卡，HTML + Chrome 无头截图，中文由 HTML 渲染 |
 | `check_art_faces.py` | ⑤ | 人脸纯黑 / 空白废图机检；退出码非 0 即有废图 |
 | `push_to_wechat_draft.mjs` | ⑧ | 上传封面 + `draft/add`；`--check` / `--dry-run` / `--list`；推送前拦四条硬门槛 |
+| `make_image_note.mjs` | ⑨ | `图文笔记\spec.json` → 一套 1080×1440 竖版图文；配图按 slug 自动找本期插画；`--validate` 只校验文案放不放得下（不需要插画） |
 
 ### 常用命令
 
@@ -75,6 +79,10 @@ python scripts\check_art_faces.py <期目录>
 # 推草稿
 node scripts\push_to_wechat_draft.mjs --check
 node scripts\push_to_wechat_draft.mjs --html <文章.html> --title "…" --digest "…" --cover <横版封面.png> [--dry-run]
+
+# 图文笔记：文案自检（创作阶段）→ 出图（通常由 publish-episode 自动做，这条用于单独重出）
+node scripts\make_image_note.mjs --spec <期目录>\图文笔记\spec.json --validate
+powershell -File scripts\publish-episode.ps1 -Slug <slug> -ImageNoteOnly
 ```
 
 ## 排版契约（Markdown 约定）
@@ -102,7 +110,7 @@ node scripts\push_to_wechat_draft.mjs --html <文章.html> --title "…" --diges
 
 外加一条：字数 ≮ 逐字稿承载量的 1/3（防退化成摘要，`--transcript` 校验）。
 
-推送本身还有一层校验：标题 ≤32 字、摘要 ≤120 字、HTML 无 `img`、无外链、无 H1；封面必须横版。只推标题 / 摘要 / 正文 HTML / 横版封面；口播稿、切片、逐字稿、贴图封面都不推。
+推送本身还有一层校验：标题 ≤32 字、摘要 ≤120 字、HTML 无 `img`、无外链、无 H1；封面必须横版。只推标题 / 摘要 / 正文 HTML / 横版封面；口播稿、切片、逐字稿、贴图封面、图文笔记都不推。
 
 ## 出图铁律
 
@@ -110,6 +118,7 @@ node scripts\push_to_wechat_draft.mjs --html <文章.html> --title "…" --diges
 - **插画重出必须重合成贴图**（旧产线漏过这步，空白脸贴图发出去过）
 - 3x4 配竖版插画，1x1 配方版插画，不允许裁竖版当方版用
 - 中文字一律 HTML + Chrome 渲染，不交给生图模型
+- 图文笔记的配图复用本期插画：封面用方版、整幅图页用竖版，默认 `center 100%` 下对齐裁切，人物完整且落在画面中央（不要改成上对齐，那会把人物压到底边）
 - 封面版式 v2：文字带 + 满幅插画 + 品牌条（3x4 / 1x1）；横版左文右图分栏，文字全部落在微信 2.35:1 中心裁切安全区内
 - 贴图封面不进公众号草稿箱
 
@@ -130,7 +139,7 @@ node scripts\push_to_wechat_draft.mjs --html <文章.html> --title "…" --diges
 | 脚本 | 作用 |
 | --- | --- |
 | `scripts\run-automation.ps1` | 完整一轮：`runner.lock` 单实例 → `codex exec` 跑创作半程 → 调 `publish-episode.ps1` |
-| `scripts\publish-episode.ps1` | 确定性半程：机检 → 排版 → 生图 → 封面 → 人脸机检 → 推草稿 → 回写清单 |
+| `scripts\publish-episode.ps1` | 确定性半程：机检 → 排版 → 生图 → 封面 → 人脸机检 → 推草稿 → 回写清单 → 图文笔记出图（每期必做：缺 `spec.json`、缺正文文案或缺导流句一律记 FAIL 并 exit 7，不影响已完成的推送） |
 | `scripts\run-rebuild.ps1` | 按 `重做清单.json` 批量重做存量 |
 
 给 `codex exec` 的指令提示词在 `assets\prompts\`：`run-one-episode.md`（生产一期）、`rebuild-one-episode.md`（重做一期）。
