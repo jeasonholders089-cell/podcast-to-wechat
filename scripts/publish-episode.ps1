@@ -4,9 +4,11 @@
   Reads <episode>/run-meta.json, which the agent phase is required to write.
 
   Usage:
-    powershell -File publish-episode.ps1 -Slug <slug> [-SkipPush] [-NoArt]
+    powershell -File publish-episode.ps1 -Slug <slug> [-SkipPush] [-NoArt] [-SkipImageNote]
+    powershell -File publish-episode.ps1 -Slug <slug> -ImageNoteOnly      # 只重出图文笔记
+    powershell -File publish-episode.ps1 -Slug <slug> -StickerOnly       # 只推图片消息（贴图）草稿
 
-  Exit codes: 0 ok / 2 bad input / 3 qc failed / 4 render failed / 5 face check failed / 6 push failed
+  Exit codes: 0 ok / 2 bad input / 3 qc failed / 4 render failed / 5 face check failed / 6 push failed / 7 image note failed
 #>
 param(
   [Parameter(Mandatory = $true)][string]$Slug,
@@ -14,7 +16,10 @@ param(
   [string]$SkillsRoot = "",
   [string]$Sizes = "h,3x4,1x1,quote",
   [switch]$SkipPush,
-  [switch]$NoArt
+  [switch]$NoArt,
+  [switch]$SkipImageNote,
+  [switch]$ImageNoteOnly,
+  [switch]$StickerOnly
 )
 
 $ErrorActionPreference = "Stop"
@@ -26,6 +31,7 @@ if ([string]::IsNullOrWhiteSpace($SkillsRoot)) {
 
 $outRoot  = Join-Path $Root "公众号产出"
 $episode  = Join-Path $outRoot $Slug
+$folderMapPath = Join-Path $outRoot "folder-map.json"
 $logPath  = Join-Path $outRoot "automation-run.log"
 $lastMsg  = Join-Path $outRoot "last-run-message.txt"
 $toDelete = Join-Path $outRoot "待删除-旧草稿.txt"
@@ -54,6 +60,127 @@ function Write-Json {
   [IO.File]::WriteAllText($Path, ($Object | ConvertTo-Json -Depth 8), $utf8NoBom)
 }
 
+# 历史期目录已按公众号标题命名：slug 找不到时回落到 folder-map.json
+function Resolve-EpisodeDir {
+  param([string]$SlugValue, [string]$Default)
+  if (Test-Path -LiteralPath $Default) { return $Default }
+  if (-not (Test-Path -LiteralPath $folderMapPath)) { return $Default }
+  try {
+    $map = Get-Content -LiteralPath $folderMapPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    $hit = @($map.items | Where-Object { $_.slug -eq $SlugValue }) | Select-Object -First 1
+    if ($hit -and $hit.folder) {
+      $candidate = Join-Path $outRoot $hit.folder
+      if (Test-Path -LiteralPath $candidate) { return $candidate }
+    }
+  } catch {}
+  return $Default
+}
+
+function ConvertTo-FolderName {
+  param([string]$Title)
+  $s = $Title.Trim()
+  $s = $s -replace '[\\/:*?"<>|]', ' '
+  $s = $s -replace '\s+', ' '
+  $s = $s.Trim().TrimEnd('.')
+  if ($s.Length -gt 80) { $s = $s.Substring(0, 80).TrimEnd() }
+  return $s
+}
+
+function Rename-EpisodeToTitle {
+  param([string]$Dir, [string]$SlugValue, [string]$Title)
+  if ([string]::IsNullOrWhiteSpace($Title)) { return $Dir }
+  $targetName = ConvertTo-FolderName -Title $Title
+  if ([string]::IsNullOrWhiteSpace($targetName)) { return $Dir }
+  $currentName = Split-Path -Leaf $Dir
+  if ($currentName -eq $targetName) { return $Dir }
+  $target = Join-Path $outRoot $targetName
+  if (Test-Path -LiteralPath $target) {
+    Write-Log "skip folder rename: target exists $targetName"
+    return $Dir
+  }
+  try {
+    Rename-Item -LiteralPath $Dir -NewName $targetName -ErrorAction Stop
+    $mapItems = @()
+    if (Test-Path -LiteralPath $folderMapPath) {
+      try {
+        $oldMap = Get-Content -LiteralPath $folderMapPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        $mapItems = @($oldMap.items | Where-Object { $_.slug -ne $SlugValue })
+      } catch {}
+    }
+    $mapItems += [ordered]@{ slug = $SlugValue; title = $Title; folder = $targetName }
+    Write-Json -Path $folderMapPath -Object ([ordered]@{
+      updatedAt = (Get-Date -Format o)
+      items = $mapItems
+    })
+    Write-Log "folder renamed -> $targetName"
+    return $target
+  } catch {
+    Write-Log "WARN folder rename failed: $($_.Exception.Message)"
+    return $Dir
+  }
+}
+
+# ---------- step 9 : 图文笔记 ----------
+# 每期必出：图文笔记\spec.json（图内文案）+ 正文-<slug>-图文笔记.md（配文，末行带公众号导流）。
+# 缺任一份、或正文缺导流句 → 记 FAIL（不影响已经完成的推送，但本轮 exit 7）；缺插画 → 脚本自己跳过。
+function Invoke-ImageNote {
+  param([string]$FileSlug = $Slug)
+  if ($SkipImageNote) { Write-Log "skip step9 图文笔记 (SkipImageNote)"; return $true }
+  $noteDir = Join-Path $episode "图文笔记"
+  $spec = Join-Path $noteDir "spec.json"
+  if (-not (Test-Path -LiteralPath $spec)) {
+    Write-Log "FAIL step9 图文笔记：缺少 图文笔记\spec.json（每期必出）"
+    return $false
+  }
+  $noteMd = Join-Path $noteDir ("正文-" + $FileSlug + "-图文笔记.md")
+  if (-not (Test-Path -LiteralPath $noteMd)) {
+    Write-Log "FAIL step9 图文笔记：缺少 正文-$FileSlug-图文笔记.md（每期必出）"
+    return $false
+  }
+  if ((Get-Content -LiteralPath $noteMd -Raw -Encoding UTF8) -notmatch "完整全文可在公众号") {
+    Write-Log "FAIL step9 图文笔记：正文文案缺导流句「完整全文可在公众号：粽子AI世界查看」"
+    return $false
+  }
+  $noteReport = Join-Path $noteDir "render-report.json"
+  & $node (Join-Path $skillZ "scripts\make_image_note.mjs") --spec $spec --out-dir $noteDir --report $noteReport | Out-Host
+  if ($LASTEXITCODE -ne 0) { Write-Log "FAIL step9 图文笔记 exit=$LASTEXITCODE"; return $false }
+  $pages = 0
+  if (Test-Path -LiteralPath $noteReport) {
+    try { $pages = (Get-Content -LiteralPath $noteReport -Raw -Encoding UTF8 | ConvertFrom-Json).count } catch { $pages = 0 }
+  }
+  Write-Log "ok step9 图文笔记 pages=$pages"
+  return $true
+}
+
+# ---------- step 9b : 贴图（图片消息）草稿 ----------
+# 图文笔记出完图后，把同一套竖图推成公众号图片消息草稿；已有成功记录就跳过，避免重复。
+function Invoke-StickerNote {
+  param([string]$FileSlug = $Slug)
+  if ($SkipPush) { Write-Log "skip step9b 贴图 (SkipPush)"; return $true }
+  if ($SkipImageNote) { Write-Log "skip step9b 贴图 (SkipImageNote)"; return $true }
+  $noteDir = Join-Path $episode "图文笔记"
+  $imgs = @(Get-ChildItem -LiteralPath $noteDir -Filter "图文笔记-*.png" -ErrorAction SilentlyContinue)
+  if ($imgs.Count -eq 0) { Write-Log "skip step9b 贴图：没有 图文笔记-*.png"; return $true }
+  $pushJson = Join-Path $noteDir "push-result.json"
+  if (Test-Path -LiteralPath $pushJson) {
+    try {
+      $prev = Get-Content -LiteralPath $pushJson -Raw -Encoding UTF8 | ConvertFrom-Json
+      if ($prev.ok -and $prev.media_id) {
+        Write-Log ("ok step9b 贴图 already pushed media_id={0}" -f $prev.media_id)
+        return $true
+      }
+    } catch {}
+  }
+  & $node (Join-Path $skillZ "scripts\push_to_wechat_draft.mjs") --image-note $episode --out $pushJson | Out-Host
+  if ($LASTEXITCODE -ne 0) { Write-Log "FAIL step9b 贴图 exit=$LASTEXITCODE"; return $false }
+  $stickerId = ""
+  if (Test-Path -LiteralPath $pushJson) {
+    try { $stickerId = (Get-Content -LiteralPath $pushJson -Raw -Encoding UTF8 | ConvertFrom-Json).media_id } catch {}
+  }
+  Write-Log ("ok step9b 贴图 media_id={0}" -f $stickerId)
+  return $true
+}
+
 # 出错必须留痕：任何未捕获异常都写进产线日志，避免「跑完却没日志」的黑盒
 trap {
   Write-Log ("FAIL unhandled: {0} - {1}" -f $_.Exception.GetType().Name, $_.Exception.Message)
@@ -62,13 +189,25 @@ trap {
 
 Write-Log ("enter slug={0} root={1}" -f $Slug, $Root)
 
+$episode = Resolve-EpisodeDir -SlugValue $Slug -Default $episode
+
 $node   = Resolve-Exe -Name "node"   -Fallbacks @("C:\Program Files\nodejs\node.exe")
 $python = Resolve-Exe -Name "python" -Fallbacks @("C:\Program Files\Python314\python.exe")
 
 if (-not (Test-Path -LiteralPath $episode)) { throw "episode dir not found: $episode" }
+
 $metaPath = Join-Path $episode "run-meta.json"
 if (-not (Test-Path -LiteralPath $metaPath)) { Write-Log "FAIL missing run-meta.json"; exit 2 }
 $meta = Get-Content -LiteralPath $metaPath -Raw -Encoding UTF8 | ConvertFrom-Json
+
+if ($ImageNoteOnly) {
+  Write-Log "mode: 只重出图文笔记"
+  if (Invoke-ImageNote -FileSlug $meta.slug) { exit 0 } else { exit 7 }
+}
+if ($StickerOnly) {
+  Write-Log "mode: 只推图片消息（贴图）草稿"
+  if (Invoke-StickerNote -FileSlug $meta.slug) { exit 0 } else { exit 7 }
+}
 
 $articleMd = Join-Path $episode $meta.article_md
 if (-not (Test-Path -LiteralPath $articleMd)) { Write-Log "FAIL missing article: $($meta.article_md)"; exit 2 }
@@ -165,8 +304,21 @@ Write-Log "ok face check"
 $coverHorizontal = Join-Path $episode ("封面-{0}-横版.png" -f $meta.slug)
 $pushScript = Join-Path $skillZ "scripts\push_to_wechat_draft.mjs"
 $mediaId = ""
+$existingDraft = $null
+$existingDraftPath = Join-Path $episode "draft.json"
+if (-not $SkipPush -and (Test-Path -LiteralPath $existingDraftPath)) {
+  try {
+    $candidateDraft = Get-Content -LiteralPath $existingDraftPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    if ($candidateDraft.media_id -and $candidateDraft.slug -eq $meta.slug -and $candidateDraft.title -eq $meta.title) {
+      $existingDraft = $candidateDraft
+    }
+  } catch {}
+}
 
-if ($SkipPush) {
+if ($existingDraft) {
+  $mediaId = $existingDraft.media_id
+  Write-Log "reuse existing draft media_id=$mediaId"
+} elseif ($SkipPush) {
   Write-Log "skip step8 push (SkipPush)"
 } else {
   & $node $pushScript --check | Out-Host
@@ -233,6 +385,18 @@ if ($mediaId -and (Test-Path -LiteralPath $master)) {
   })
 }
 
-$summary = "slug={0} title={1} media_id={2} pushed={3}" -f $meta.slug, $meta.title, $mediaId, (-not $SkipPush)
+# ---------- step 9 : 图文笔记 ----------
+$noteOk = Invoke-ImageNote -FileSlug $meta.slug
+$noteState = "ok"
+if (-not $noteOk) { $noteState = "failed" }
+
+$stickerOk = Invoke-StickerNote -FileSlug $meta.slug
+$stickerState = "ok"
+if (-not $stickerOk) { $stickerState = "failed" }
+
+$episode = Rename-EpisodeToTitle -Dir $episode -SlugValue $meta.slug -Title $meta.title
+
+$summary = "slug={0} title={1} media_id={2} pushed={3} note={4} sticker={5}" -f $meta.slug, $meta.title, $mediaId, (-not $SkipPush), $noteState, $stickerState
 [IO.File]::WriteAllText($lastMsg, $summary, $utf8NoBom)
 Write-Log "done $summary"
+if (-not $noteOk) { exit 7 }

@@ -18,6 +18,22 @@
 - 所有脚本都已经写好并验证过，**直接调用，不要读脚本源码**（省时间也省额度）。
 - 跑脚本用全路径，例如 `node C:\Users\Administrator\.codex\skills\podcast-to-wechat\scripts\xxx.mjs`。
 
+## 合规前置（P0，与后文任何说法冲突时以本节为准）
+
+规则原文与出处：`C:\Users\Administrator\.codex\skills\podcast-to-wechat\references\platform-rules.md`。写标题和摘要之前先扫一眼。
+
+- **不勾原创**：编译稿按《运营规范》3.6.1.5 不能声明原创，勾了会被永久收回原创功能。纯编译期一律不勾；只有自有论点 ≥40% 的评论版才可以勾。
+- **AI 声明**：文末 `## 来源` 的最后一项固定写 `- AI 说明：本文由人工编译与校对，AI 辅助整理，封面与插画由 AI 生成。`。少了这一行推送会被机检拦下。
+- **标题** ≤32 字（22–30 最佳），前 15 字内出现主词；**摘要 100–120 字**。禁止「震惊 / 速看 / 全网 / 沸腾 / 删前」这类词。
+- **涉企定性**（幻觉 / 骗局 / 崩盘 / 泡沫）落在标题上时，首段必须写明这是受访者的判断，不是本号的结论。
+- 文章写完，除了 `check_ai_flavor.mjs` 还要跑一次平台机检，退出码必须 0：
+
+```
+node C:\Users\Administrator\.codex\skills\podcast-to-wechat\scripts\check_platform_rules.mjs --md <文章.md>
+```
+
+- **节奏**：跑批只到草稿箱，群发人工点；用"仅发布"补长尾时每天不超过 2 篇（运营规范 3.27 禁止脚本批量、连续发布）。
+
 ## 你要完成的环节
 
 ### 0 选题
@@ -59,7 +75,7 @@ node C:\Users\Administrator\.codex\skills\podcast-to-wechat\scripts\fetch_transc
 - 结构：叙事钩子 → `## 主要观点`（≤5 条）→ `## 01 …` 分节逐轮问答 → 结尾判断
 - **`## 来源` 和编译说明都写在文末**：正文之前不要放任何说明块或来源块，开头直接进钩子
 - `## 来源`（文末）写全四项：节目、嘉宾、发布（日期 + 时长）、原视频（搜索词）
-- 文末再补一段 `> ` 编译说明
+- 文末不加编译说明（规范 2026-10-16 起取消），只保留 `- AI 说明：…` 那一行
 - 正文 0 图、0 外链、0 个 H1
 - 破折号 `——` 0 处
 - 单轮发言正文 ≥15 字，短追问扩成完整提问，短答并进前后论述
@@ -90,6 +106,25 @@ node C:\Users\Administrator\.codex\skills\podcast-to-wechat\scripts\check_ai_fla
 
 - `口播稿-<slug>.md`：3–4 分钟，800–1000 字，含停顿（`//`）与重音（`**加粗**`）
 - `切片-<n>-<slug>.md`：3–5 条，每条写标题、口播词、字幕要点、画面注记
+
+### ⑨ 图文笔记文案（每期必出，不可跳过）
+
+再把这篇长文压成一套竖版图文（每页 1080×1440，8–10 页）。**只写文案，不出图**：出图由 `publish-episode.ps1` 调 `make_image_note.mjs` 完成。
+
+- 规范（页面结构、每页字数上限、写作规矩）：`C:\Users\Administrator\.codex\skills\podcast-to-wechat\references\image-note.md`
+- 产物两份：`<期目录>\图文笔记\spec.json`（图内文案）和 `<期目录>\图文笔记\正文-<slug>-图文笔记.md`（配图发布的正文：3 条标题候选 + 600–900 字正文 + 话题标签）
+- 正文文案的**最后一行必须写清**：`完整全文可在公众号：粽子AI世界查看。`
+- 每篇文章都必须配一套图文笔记。缺 `spec.json`、缺正文文案、或正文缺导流句，这一期都算没跑完
+- 结构固定：封面 → 导语 → 整幅图页 → 主要观点 → 3–4 节正文 → 收尾
+- 配图不用写进 spec，脚本按 `name` 自动找本期的竖版 / 方版插画
+- 不写来源块，来源只留在文章里
+- 写完必须自检，退出码 0 才算过：
+
+```
+node C:\Users\Administrator\.codex\skills\podcast-to-wechat\scripts\make_image_note.mjs --spec <期目录>\图文笔记\spec.json --validate
+```
+
+报错说某页「放不下」就删减那页文字或把它拆成两页，重跑到通过。
 
 ### 收尾：写 run-meta.json
 
@@ -128,11 +163,15 @@ node C:\Users\Administrator\.codex\skills\podcast-to-wechat\scripts\check_ai_fla
 | `quote` | 金句卡正文，一句话 |
 | `art_subject` / `art_motif` | 给生图脚本用，必须具体 |
 | `source_show` / `published_at` | 从 `video-meta.json` 抄，不要凭印象 |
+| `album` | 本期归入的合集名，固定写「AI 商业访谈」；合集名本身就是搜索词 |
+| `note_title` | 图文笔记推贴图时用的正标题，**≤20 字**，可与推送标题不同 |
 
 ## 不要做的事
 
 - 不要推草稿箱（推草稿由 publish-episode.ps1 统一负责）
 - 不要自己排版 HTML（渲染由 render_article.mjs 负责）
+- 不要手搓 PNG（文章插图、封面、图文笔记的图都由脚本渲染）
+- 不要在图文笔记的图里写来源块（正文文案末行那句导流照写）
 - 不要产出「精编摘要」体
 - 不要让正文出现任何图片或外链
 

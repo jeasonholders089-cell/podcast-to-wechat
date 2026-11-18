@@ -5,10 +5,12 @@
 //   --list [--count N] [--offset M]   查看草稿箱条目（草稿箱上限 77+ 条，按 offset 翻页）
 //   正式推送：--html <file> --title <t> --digest <d> --cover <png> [--author <a>]
 //   原地更新：--update <media_id> --html <file> --title <t> --digest <d> --cover <png> [--index 0]
+//   图片消息（贴图）：--image-note <期目录> [--title <t>] [--dry-run]
 //   --out <file>                把结果 JSON 额外写一份到文件（UTF-8），供 PowerShell 读取
 
-import { readFileSync, existsSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { readFileSync, existsSync, writeFileSync, readdirSync } from "node:fs";
+import { resolve, join, basename } from "node:path";
+import { inspect as inspectPlatform } from "./lib/platform-rules.mjs";
 
 // 先读共享 env，再用产线自己的 .env 覆盖（后者优先）
 const DEFAULT_ENV_FILES = ["D:/内容生产/.env", "D:/项目/AI内容生产/.env"];
@@ -47,7 +49,8 @@ if (args.help) {
   node push_to_wechat_draft.mjs --check
   node push_to_wechat_draft.mjs --list --count 5
   node push_to_wechat_draft.mjs --html <html> --title <t> --digest <d> --cover <png> [--author <a>] [--dry-run] [--out <file>]
-  node push_to_wechat_draft.mjs --update <media_id> --html <html> --title <t> --digest <d> --cover <png> [--out <file>]`);
+  node push_to_wechat_draft.mjs --update <media_id> --html <html> --title <t> --digest <d> --cover <png> [--out <file>]
+  node push_to_wechat_draft.mjs --image-note <期目录> [--title <t>] [--dry-run] [--out <file>]`);
   process.exit(0);
 }
 
@@ -137,6 +140,121 @@ if (args.list) {
   process.exit(0);
 }
 
+// ---- 图片消息（贴图）草稿 ----
+if (args["image-note"]) {
+  const root = resolve(args["image-note"]);
+  if (!existsSync(root)) fail(`期目录不存在：${root}`);
+  const noteDir = existsSync(join(root, "图文笔记")) ? join(root, "图文笔记") : root;
+  const all = readdirSync(noteDir);
+  const imgs = all
+    .filter((f) => /^图文笔记-\d+.*\.png$/i.test(f))
+    .sort((a, b) => Number(a.match(/-(\d+)/)[1]) - Number(b.match(/-(\d+)/)[1]))
+    .map((f) => join(noteDir, f));
+  if (!imgs.length) fail(`没找到 图文笔记-*.png：${noteDir}`);
+
+  const mdName = all.find((f) => /^正文-.*\.md$/.test(f));
+  const mdFile = mdName ? join(noteDir, mdName) : "";
+
+  let title = args.title || "";
+  if (!title) {
+    const metaPath = join(root, "run-meta.json");
+    if (existsSync(metaPath)) {
+      try {
+        const m = JSON.parse(readFileSync(metaPath, "utf8"));
+        title = m.note_title || m.title || "";
+      } catch {}
+    }
+  }
+
+  let body = "";
+  if (mdFile && existsSync(mdFile)) {
+    const md = readFileSync(mdFile, "utf8").replace(/\r\n/g, "\n");
+    const sec = md.match(/##\s*正文\s*\n([\s\S]*)$/);
+    body = (sec ? sec[1] : md)
+      .replace(/^#.*$/gm, "")
+      .replace(/^配图：.*$/gm, "")
+      .replace(/^\s*\d+\.\s+.*$/gm, (m) => (sec ? m : ""))
+      .replace(/\*\*/g, "")
+      .replace(/==/g, "")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+    if (!title) {
+      const t = md.match(/##\s*标题候选\s*\n+\s*1\.\s*(.+)/);
+      if (t) title = t[1].trim();
+    }
+  }
+  if (args.content) body = args.content;
+  if (!title) fail("缺少标题：用 --title 传");
+
+  const problems = [];
+  if (cjkLen(title) > 32) problems.push(`标题 ${cjkLen(title)} 字 > 32 字`);
+  if (!body) problems.push("正文为空");
+if (imgs.length < 2 || imgs.length > 20) problems.push(`图片 ${imgs.length} 张，图片消息要求 2–20 张`);
+  if (cjkLen(body) > 1000) problems.push(`贴图正文 ${cjkLen(body)} 字 > 1000 字上限（2026 版贴图规格）`);
+  const noteRules = inspectPlatform({ title, contentHtml: body, kind: "newspic" });
+  problems.push(...noteRules.fail);
+if (problems.length) fail("图片消息门槛不通过：\n  - " + problems.join("\n  - "), problems);
+
+  const totalBytes = imgs.reduce((s, p) => s + readFileSync(p).length, 0);
+  const preview = {
+    kind: "图片消息（newspic）",
+    title,
+    title_chars: cjkLen(title),
+    content_chars: body.length,
+    images: imgs.map((p) => basename(p)),
+    total_mb: Number((totalBytes / 1048576).toFixed(1)),
+  };
+
+  if (args["dry-run"]) {
+    emit({ ok: true, dry_run: true, payload: preview });
+    process.exit(0);
+  }
+
+  const token = await getToken();
+  const imageList = [];
+  for (let i = 0; i < imgs.length; i++) {
+    const p = imgs[i];
+    const fd = new FormData();
+    fd.append("media", new Blob([readFileSync(p)], { type: "image/png" }), basename(p));
+    const res = await fetch(`${API}/cgi-bin/material/add_material?access_token=${token}&type=image`, {
+      method: "POST",
+      body: fd,
+    });
+    const data = await res.json();
+    if (!data.media_id) fail(`第 ${i + 1} 张上传失败：errcode=${data.errcode} errmsg=${data.errmsg}`, data);
+    imageList.push({ image_media_id: data.media_id });
+    console.error(`  上传 ${i + 1}/${imgs.length}  ${basename(p)}`);
+  }
+
+  const res = await fetch(`${API}/cgi-bin/draft/add?access_token=${token}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      articles: [
+        {
+          article_type: "newspic",
+          title,
+          content: body,
+          need_open_comment: 0,
+          only_fans_can_comment: 0,
+          image_info: { image_list: imageList },
+        },
+      ],
+    }),
+  });
+  const data = await res.json();
+  if (!data.media_id) fail(`创建图片消息草稿失败：errcode=${data.errcode} errmsg=${data.errmsg}`, data);
+  emit({
+    ok: true,
+    kind: "newspic",
+    media_id: data.media_id,
+    title,
+    images: imageList.length,
+    duck: "只进草稿箱，未群发",
+  });
+  process.exit(0);
+}
+
 if (!args.html || !args.title) {
   fail("缺少 --html 或 --title。用 --dry-run 可只组包。");
 }
@@ -153,6 +271,9 @@ if ((content.match(/<img/g) ?? []).length > 0) problems.push("正文 HTML 里有
 if ((content.match(/href="https?:/g) ?? []).length > 0) problems.push("正文 HTML 里有外链（规范要求 0 外链）");
 if (/<h1[\s>]/i.test(content)) problems.push("正文 HTML 里有 H1（规范要求无 H1）");
 
+const articleRules = inspectPlatform({ title, digest, contentHtml: content, kind: "article" });
+problems.push(...articleRules.fail);
+for (const w of articleRules.warn) console.log(`WARN  ${w}`);
 if (problems.length) fail("硬门槛不通过：\n  - " + problems.join("\n  - "), problems);
 
 const payloadPreview = {

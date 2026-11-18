@@ -26,13 +26,22 @@ node C:\Users\Administrator\.codex\skills\podcast-to-wechat\scripts\check_ai_fla
 ```
 
 8. 更新 `run-meta.json`（字段同 `prompts\run-one-episode.md`；`quote` / `cover_title` / `stat` 可以沿用旧稿里的信息重新提炼）
+9. 同步重写图文笔记文案两份（每期必出）：`图文笔记\spec.json`（图内文案）和 `图文笔记\正文-<slug>-图文笔记.md`（配图发布的正文，末行必须写清 `完整全文可在公众号：粽子AI世界查看。`）。结构同 `references\image-note.md`；旧稿可能没有这两个文件，按新规范从零写。写完自检：
+
+```
+node C:\Users\Administrator\.codex\skills\podcast-to-wechat\scripts\make_image_note.mjs --spec <期目录>\图文笔记\spec.json --validate
+```
+
+报错说某页「放不下」就删减那页文字或把它拆成两页，重跑到退出码 0。
 
 ## 不要做的事
 
 - 不要推草稿箱（由 publish-episode.ps1 负责）
 - 不要排版 HTML
+- 不要手搓 PNG（图文笔记的图由 make_image_note.mjs 渲染）
+- 不要在图文笔记的图里写来源块（正文文案末行那句导流照写）
 - 不要为了凑字数注水，也不要为了压缩删掉问答
 
 ## 最终回复格式
 
-中文，简短：改了哪几处结构性问题（碎片回合 / 字数 / 来源四项）、重写后字数、机检结论、文件清单。
+中文，简短：改了哪几处结构性问题（碎片回合 / 字数 / 来源四项）、重写后字数、机检结论、图文笔记页数、文件清单。
